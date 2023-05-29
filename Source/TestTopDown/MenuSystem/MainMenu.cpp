@@ -6,6 +6,53 @@
 #include "Components/Button.h"
 #include "Components/WidgetSwitcher.h"
 #include "Components/EditableTextBox.h"
+#include "Components/TextBlock.h"
+
+#include "ServerRow.h"
+
+UMainMenu::UMainMenu()
+{
+	ConstructorHelpers::FClassFinder<UUserWidget> serverRowBPClass(TEXT("/Game/MenuSystem/WBP_ServerRow"));
+	if (serverRowBPClass.Class == nullptr) return;
+	serverRowClass = serverRowBPClass.Class;
+}
+
+void UMainMenu::SetServerList(TArray<FServerData>& serverData)
+{
+	UWorld* world = this->GetWorld();
+	if (world == nullptr) return;
+
+	serverList->ClearChildren();
+	uint32 i = 0;
+	for (auto& data : serverData)
+	{
+		UServerRow* row = CreateWidget<UServerRow>(this, serverRowClass);
+		if (row == nullptr)return;
+		row->serverNameTextBlock->SetText(FText::FromString(data.serverName));
+		row->hostUserNameTextBlock->SetText(FText::FromString(data.hostUserName));
+		row->playerCountTextBlock->SetText(FText::FromString(FString::Printf(TEXT("%d/%d"), data.currentPlayerCount, data.maxPlayerCount)));
+		row->Setup(this, i++);
+		
+		serverList->AddChild(row);
+	}
+}
+
+void UMainMenu::SelectIndex(uint32 index)
+{
+	selectedServerIndex = index;
+	UpdateChildren();
+}
+
+void UMainMenu::UpdateChildren()
+{
+	int32 serverCount = serverList->GetChildrenCount();
+	for (int32 i = 0 ; i < serverCount; i++)
+	{
+		auto row = Cast<UServerRow>( serverList->GetChildAt(i));
+		if (row == nullptr) return;
+		row->selected = selectedServerIndex.IsSet() &&  (selectedServerIndex.GetValue() == i);
+	}
+}
 
 bool UMainMenu::Initialize()
 {
@@ -16,43 +63,63 @@ bool UMainMenu::Initialize()
 	if (cancleJoinMenuButton == nullptr) return false;
 	if (joinButton == nullptr) return false;
 	if (quitButton == nullptr) return false;
+	if (hostMenuButton == nullptr) return false;
 
-	hostButton->OnClicked.AddDynamic(this, &UMainMenu::HostServer);
-	joinMenuButton->OnClicked.AddDynamic(this, &UMainMenu::OpenJoinMenu);
-	cancleJoinMenuButton->OnClicked.AddDynamic(this, &UMainMenu::OpenMainMenu);
-	joinButton->OnClicked.AddDynamic(this, &UMainMenu::JoinToServer);
-	quitButton->OnClicked.AddDynamic(this, &UMainMenu::QuitGame);
+	hostMenuButton->OnClicked.AddDynamic(this, &UMainMenu::OnHostMenuButtonClicked);
+	hostButton->OnClicked.AddDynamic(this, &UMainMenu::OnHostButtonClicked);
+	cancleHostMenuButton->OnClicked.AddDynamic(this, &UMainMenu::OnCancleHostMenuClicked);
+	joinMenuButton->OnClicked.AddDynamic(this, &UMainMenu::OnJoinMenuButtonClicked);
+	cancleJoinMenuButton->OnClicked.AddDynamic(this, &UMainMenu::OnCancleJoinMenuClicked);
+	joinButton->OnClicked.AddDynamic(this, &UMainMenu::OnJoinButtonClicked);
+	quitButton->OnClicked.AddDynamic(this, &UMainMenu::OnQuitButtonClicked);
 
 	return true;
 }
 
-void UMainMenu::OpenJoinMenu()
+void UMainMenu::OnJoinMenuButtonClicked()
 {
 	if (menuSwitcher == nullptr) return;
 	if (joinMenu == nullptr) return;
 	menuSwitcher->SetActiveWidget(joinMenu);
-}
 
-void UMainMenu::OpenMainMenu()
+	if (menuInterface == nullptr) return;
+	menuInterface->OnJoinMenuButtonClicked();
+}
+void UMainMenu::OnJoinButtonClicked()
+{
+	if (selectedServerIndex.IsSet() == false) return;
+	if (menuInterface == nullptr) return;
+	menuInterface->OnJoinButtonClicked(selectedServerIndex.GetValue());
+}
+void UMainMenu::OnCancleJoinMenuClicked()
 {
 	if (menuSwitcher == nullptr) return;
 	if (mainMenu == nullptr) return;
 	menuSwitcher->SetActiveWidget(mainMenu);
 }
-void UMainMenu::HostServer()
+void UMainMenu::OnHostMenuButtonClicked()
 {
-	if (menuInterface == nullptr) return;
-	menuInterface->Host();
+	if (menuSwitcher == nullptr) return;
+	if (hostMenu == nullptr) return;
+	menuSwitcher->SetActiveWidget(hostMenu);
+
 }
-void UMainMenu::JoinToServer()
+void UMainMenu::OnHostButtonClicked()
 {
 	if (menuInterface == nullptr) return;
-	if (joinIpTextBox == nullptr) return;
-	
-	menuInterface->Join((joinIpTextBox->GetText().ToString()));
+	if (roomNameTextBox == nullptr) return;
+	UE_LOG(LogTemp, Warning, TEXT("Menu OnHostButtonClicked"));
+	menuInterface->OnHostButtonClicked(roomNameTextBox->GetText().ToString());
+}
+void UMainMenu::OnCancleHostMenuClicked()
+{
+	if (menuSwitcher == nullptr) return;
+	if (mainMenu == nullptr) return;
+	menuSwitcher->SetActiveWidget(mainMenu);
 }
 
-void UMainMenu::QuitGame()
+
+void UMainMenu::OnQuitButtonClicked()
 {
 	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
 	if (PlayerController == nullptr) return;
