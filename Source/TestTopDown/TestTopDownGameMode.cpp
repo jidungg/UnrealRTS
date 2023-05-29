@@ -4,6 +4,18 @@
 #include "TestTopDownPlayerController.h"
 #include "TestTopDownCharacter.h"
 #include "UObject/ConstructorHelpers.h"
+//
+//void ATestTopDownGameMode::BeginPlay()
+//{
+//	Super::BeginPlay();
+//
+//	FFileHelper::SaveStringToFile(TEXT(RAW_APP_ID), TEXT("steam_appid.txt"));
+//
+//	SteamAPI_RestartAppIfNecessary(atoi(APP_ID));
+//
+//	if (SteamAPI_Init())
+//		myId = SteamUser()->GetSteamID();
+//}
 
 ATestTopDownGameMode::ATestTopDownGameMode()
 {
