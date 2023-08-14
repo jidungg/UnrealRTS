@@ -3,11 +3,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Selectable.h"
+#include "AIData.h"
 #include "GameFramework/Character.h"
 #include "TestTopDownCharacter.generated.h"
 
+class AMyAIController;
+
 UCLASS(Blueprintable)
-class ATestTopDownCharacter : public ACharacter
+class ATestTopDownCharacter : public ACharacter, public ISelectable
 {
 	GENERATED_BODY()
 
@@ -30,5 +34,78 @@ private:
 	/** Camera boom positioning the camera above the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class USpringArmComponent* CameraBoom;
+
+public:
+	//ISelectable interface
+	virtual void Select() override;
+	virtual void Deselect() override;
+	virtual void Highlight(const bool Highlight) override;
+
+	UPROPERTY()
+	bool Selected;
+
+public:
+	UFUNCTION()
+	void CommandMoveToLocation(const FCommandData CommandData);
+
+	UFUNCTION()
+	void SetAIController(AMyAIController* NewAIController) { MyAIController = NewAIController; }
+
+protected:
+	virtual void BeginPlay() override;
+
+	UFUNCTION()
+	void CreateMoveMarker();
+
+	UFUNCTION()
+	FTransform GetPositionTransform(const FVector Position) const;
+
+	UFUNCTION()
+	void CommandMove(const FCommandData CommandData);
+
+	UFUNCTION()
+	void DestinationReached(const FCommandData CommandData);
+
+	UFUNCTION()
+	void SetWalk() const;
+
+	UFUNCTION()
+	void SetRun() const;
+
+	UFUNCTION()
+	void SetSprint() const;
+
+	UFUNCTION()
+	void SetOrientation(const float DeltaTime);
+
+	UFUNCTION()
+	bool IsOrientated() const;
+
+
+	UFUNCTION()
+	void SetMoveMarkerLocation(const FVector Location);
+
+	UPROPERTY()
+	UCharacterMovementComponent* CharacterMoveComp;
+
+	UPROPERTY()
+	float MaxSpeed;
+
+
+	UPROPERTY()
+	FRotator TargertOrientation;
+
+	UPROPERTY()
+	uint8 ShouldOrientate;
+
+	UPROPERTY()
+	AMyAIController* MyAIController;
+
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "AI Settings")
+	TSubclassOf<AActor> MoveMarkerClass;
+
+	UPROPERTY()
+	AActor* MoveMarker;
 };
 
