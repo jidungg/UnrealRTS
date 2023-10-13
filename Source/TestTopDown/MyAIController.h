@@ -38,7 +38,7 @@ protected:
 	virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
 
 	UPROPERTY()
-	class ATestTopDownCharacter* OwningCharacter;
+	class ABaseUnit* OwningCharacter;
 
 	UPROPERTY()
 	FCommandData CurrentCommandData;
