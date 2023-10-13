@@ -26,7 +26,7 @@ public:
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Placement")
-	TSubclassOf<class ATestTopDownCharacter> PlaceableClass;
+	TSubclassOf<class ABaseUnit> PlaceableClass;
 
 private:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))

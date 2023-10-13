@@ -2,7 +2,7 @@
 
 #include "TestTopDownGameMode.h"
 #include "TestTopDownPlayerController.h"
-#include "TestTopDownCharacter.h"
+#include "BaseUnit.h"
 #include "UObject/ConstructorHelpers.h"
 //
 //void ATestTopDownGameMode::BeginPlay()

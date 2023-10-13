@@ -14,7 +14,7 @@
 #include "EnhancedInputComponent.h"
 #include "PlayerInputActions.h"
 #include "EngineUtils.h"
-#include "TestTopDownCharacter.h"
+#include "BaseUnit.h"
 
 // Sets default values
 APlayerPawn::APlayerPawn()
@@ -92,7 +92,28 @@ void APlayerPawn::BeginPlay()
 	PlayerController = Cast<ARTSPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
 
 	CreateSelectionBox();
+
 }
+
+void APlayerPawn::CreateSelectionBox()
+{
+	if (SelectionBoxClass == nullptr)return;
+
+	UWorld* World = GetWorld();
+	if (World == nullptr) return;
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Instigator = this;
+	SpawnParams.Owner = this;
+	SelectionBox = World->SpawnActor<ASelectionBox>(SelectionBoxClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+
+	if (SelectionBox)
+	{
+		SelectionBox->SetOwner(this);
+	}
+
+}
+
 // Called every frame
 void APlayerPawn::Tick(float DeltaTime)
 {
@@ -177,24 +198,7 @@ void APlayerPawn::GetTerrainPosition(FVector& TerrainPosition) const
 }
 
 
-void APlayerPawn::CreateSelectionBox()
-{
-	if (SelectionBoxClass == nullptr)return;
 
-	UWorld* World = GetWorld();
-	if (World == nullptr) return;
-
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.Instigator = this;
-	SpawnParams.Owner = this;
-	SelectionBox = World->SpawnActor<ASelectionBox>(SelectionBoxClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-
-	if (SelectionBox)
-	{
-		SelectionBox->SetOwner(this);
-	}
-
-}
 
 void APlayerPawn::Move(const FInputActionValue& Value)
 {
@@ -241,6 +245,7 @@ void APlayerPawn::Select(const FInputActionValue& Value)
 	LeftMouseHitLocation = PlayerController->GetMousePositionOnTerrain();
 	UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::Select %s"), *LeftMouseHitLocation.ToString());
 }
+
 void APlayerPawn::SelectHold(const FInputActionValue& Value)
 {
 	
@@ -276,7 +281,31 @@ void APlayerPawn::SelectEnd(const FInputActionValue& Value)
 		PlayerController->Handle_Selection(GetSelectedObject());
 	}
 }
+AActor* APlayerPawn::GetSelectedObject()
+{
+	UWorld* World = GetWorld();
+	if (World == nullptr) return nullptr;
 
+	FVector WorldLoacation, WorldDirection;
+	PlayerController->DeprojectMousePositionToWorld(WorldLoacation, WorldDirection);
+	FVector End = WorldDirection * 10000000.0f + WorldLoacation;
+	UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::GetSelectedObject WorldLoacation: %s, WorldDirection : %s, End : %s"), *WorldLoacation.ToString(), *WorldDirection.ToString(), *End.ToString());
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	FHitResult Hit;
+	if (World->LineTraceSingleByChannel(Hit, WorldLoacation, End, ECC_Visibility, Params))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::GetSelectedObject Hit"));
+		if (AActor* HitActor = Hit.GetActor())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::GetSelectedObject Hit Actor, %s"), *HitActor->GetFName().ToString());
+			return HitActor;
+		}
+	}
+
+	return nullptr;
+}
 void APlayerPawn::Zoom(const FInputActionValue& Value)
 {
 	if (ensure(Value.GetValueType() == EInputActionValueType::Axis1D))
@@ -312,31 +341,7 @@ void APlayerPawn::PlaceCancel(const FInputActionValue& Value)
 		PlayerController->PlaceCancel();
 	}
 }
-AActor* APlayerPawn::GetSelectedObject()
-{
-	UWorld* World = GetWorld();
-	if (World == nullptr) return nullptr;
 
-	FVector WorldLoacation, WorldDirection;
-	PlayerController->DeprojectMousePositionToWorld(WorldLoacation, WorldDirection);
-	FVector End = WorldDirection * 10000000.0f + WorldLoacation;
-	UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::GetSelectedObject WorldLoacation: %s, WorldDirection : %s, End : %s"),*WorldLoacation.ToString(), *WorldDirection.ToString(), *End.ToString());
-	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(this);
-
-	FHitResult Hit;
-	if (World->LineTraceSingleByChannel(Hit, WorldLoacation, End, ECC_Visibility, Params))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::GetSelectedObject Hit"));
-		if (AActor* HitActor = Hit.GetActor())
-		{
-			UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::GetSelectedObject Hit Actor"));
-			return HitActor;
-		}
-	}
-
-	return nullptr;
-}
 void APlayerPawn::SelectDoubleTap(const FInputActionValue& Value)
 {
 	if (PlayerController == nullptr)
@@ -345,7 +350,7 @@ void APlayerPawn::SelectDoubleTap(const FInputActionValue& Value)
 	if (AActor* Selection = GetSelectedObject())
 	{
 
-		if (ATestTopDownCharacter* SelectedCharacter = Cast< ATestTopDownCharacter>(Selection))
+		if (ABaseUnit* SelectedCharacter = Cast< ABaseUnit>(Selection))
 		{
 	
 			PlayerController->Handle_Deselection(SelectedCharacter);
@@ -386,16 +391,17 @@ FCommandData APlayerPawn::CreateCommandData(const ECommandType Type) const
 
 	FRotator CommandRotation = FRotator::ZeroRotator;
 	const FVector CommandEndLocation = PlayerController->GetMousePositionOnTerrain();
+	bool dragAfterCommand = 0;
 
 	if ((CommandEndLocation - CommandLocation).Length() > 100.f)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::CreateCommandData over 100.f"));
+		dragAfterCommand = true;
+		UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::CreateCommandData over 100.f %d "), dragAfterCommand);
 		const FVector Direction = CommandEndLocation - CommandLocation;
 		const float RotationAngle = FMath::RadiansToDegrees(FMath::Atan2(Direction.Y, Direction.X));
-
 		CommandRotation = FRotator(0.f, RotationAngle, 0.f);
 	}
-	return FCommandData(CommandLocation, CommandRotation, Type);
+	return FCommandData(CommandLocation, CommandRotation, Type, dragAfterCommand);
 }
 
 void APlayerPawn::Alt(const FInputActionValue& Value)

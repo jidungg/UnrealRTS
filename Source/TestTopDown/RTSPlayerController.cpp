@@ -4,7 +4,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "PlayerInputActions.h"
 #include "PlacementPreview.h"
-#include "TestTopDownCharacter.h"
+#include "BaseUnit.h"
 
 ARTSPlayerController::ARTSPlayerController(const FObjectInitializer& ObjectInitializer)
 {
@@ -22,6 +22,23 @@ void ARTSPlayerController::BeginPlay()
 	bEnableMouseOverEvents = true;
 }
 
+void ARTSPlayerController::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (bPlacementModeEnabled && PlacementPreviewActor != nullptr)
+	{
+		UpdatePlacement();
+	}
+}
+
+void ARTSPlayerController::UpdatePlacement() const
+{
+	if (PlacementPreviewActor == nullptr)
+		return;
+
+	PlacementPreviewActor->SetActorLocation(GetMousePositionOnSurface());
+}
 void ARTSPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
@@ -32,6 +49,8 @@ void ARTSPlayerController::SetupInputComponent()
 		SetInputDefault();
 	}
 }
+
+
 void ARTSPlayerController::SetPlacementPreview()
 {
 	if (PreviewActorType && !bPlacementModeEnabled)
@@ -51,34 +70,32 @@ void ARTSPlayerController::SetPlacementPreview()
 		}
 	}
 }
+void ARTSPlayerController::SetInputPlacement(const bool Enable) const
+{
+	if (const UPlayerInputActions* PlayerActions = Cast<UPlayerInputActions>(PlayerActionsAsset))
+	{
+		ensure(PlayerActions->MappingContextPlacement);
+		if (Enable)
+		{
+			AddInputMapping(PlayerActions->MappingContextPlacement, PlayerActions->MapPriorityPlacement);
+			SetInputDefault(!Enable);
+		}
+		else
+		{
+			RemoveInputMapping(PlayerActions->MappingContextPlacement);
+			SetInputDefault();
+		}
+	}
+}
 void ARTSPlayerController::Place()
 {
 	if (!IsPlacementModeEnabled() || !PlacementPreviewActor)
 		return;
-	
+
 	bPlacementModeEnabled = false;
 	SetInputPlacement(false);
 	Server_Place(PlacementPreviewActor);
 }
-
-void ARTSPlayerController::PlaceCancel()
-{
-	if (!IsPlacementModeEnabled() || !PlacementPreviewActor)
-		return;
-
-	bPlacementModeEnabled = false;
-	SetInputPlacement(false);
-	EndPlacement();
-}
-
-void ARTSPlayerController::UpdatePlacement() const
-{
-	if (PlacementPreviewActor == nullptr)
-		return;
-
-	PlacementPreviewActor->SetActorLocation(GetMousePositionOnSurface());
-}
-
 void ARTSPlayerController::Server_Place_Implementation(AActor* PlacementPreviewToSpawn)
 {
 	if (const APlacementPreview* Preview = Cast<APlacementPreview>(PlacementPreviewToSpawn))
@@ -89,7 +106,7 @@ void ARTSPlayerController::Server_Place_Implementation(AActor* PlacementPreviewT
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-		ATestTopDownCharacter* NewUnit = GetWorld()->SpawnActor< ATestTopDownCharacter>(Preview->PlaceableClass, SpawnTransfrom, SpawnParams);
+		ABaseUnit* NewUnit = GetWorld()->SpawnActor<ABaseUnit>(Preview->PlaceableClass, SpawnTransfrom, SpawnParams);
 		if (NewUnit != nullptr)
 		{
 			NewUnit->SetOwner(this);
@@ -98,6 +115,17 @@ void ARTSPlayerController::Server_Place_Implementation(AActor* PlacementPreviewT
 
 	EndPlacement();
 }
+void ARTSPlayerController::PlaceCancel()
+{
+	if (!IsPlacementModeEnabled() || !PlacementPreviewActor)
+		return;
+
+	bPlacementModeEnabled = false;
+	SetInputPlacement(false);
+	EndPlacement();
+}
+
+
 void ARTSPlayerController::EndPlacement_Implementation()
 {
 	PlacementPreviewActor->Destroy();
@@ -119,24 +147,7 @@ void ARTSPlayerController::SetInputDefault(const bool Enable) const
 		}
 	}
 }
-void ARTSPlayerController::SetInputPlacement(const bool Enable) const
-{
-	if (const UPlayerInputActions* PlayerActions = Cast<UPlayerInputActions>(PlayerActionsAsset))
-	{
-		ensure(PlayerActions->MappingContextPlacement);
-		if (Enable)
-		{
 
-			AddInputMapping(PlayerActions->MappingContextPlacement, PlayerActions->MapPriorityPlacement);
-			SetInputDefault(!Enable);
-		}
-		else
-		{
-			RemoveInputMapping(PlayerActions->MappingContextPlacement);
-			SetInputDefault();
-		}
-	}
-}
 void ARTSPlayerController::SetInputShift(const bool Enable) const
 {
 	ensureMsgf(PlayerActionsAsset, TEXT("PlayerActionAsset is Null"));
@@ -193,7 +204,7 @@ void ARTSPlayerController::SetInputCtrl(const bool Enable) const
 }
 void ARTSPlayerController::CommandSelected(FCommandData CommandData)
 {
-	UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::CommandSelected"));
+	UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::CommandSelected %d"), CommandData.bDragAfterCommand);
 	Server_CommandSelected(CommandData);
 }
 
@@ -203,7 +214,7 @@ void ARTSPlayerController::Server_CommandSelected_Implementation(FCommandData Co
 	UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::Server_CommandSelected_Implementation %d"), Selected.Num());
 	for (int i = 0; i < Selected.Num(); i++)
 	{
-		if (ATestTopDownCharacter* SelectedCharacter = Cast<ATestTopDownCharacter>(Selected[i]))
+		if (ABaseUnit* SelectedCharacter = Cast<ABaseUnit>(Selected[i]))
 		{
 			UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::Server_CommandSelected_Implementation %s"), *SelectedCharacter->GetFName().ToString());
 			SelectedCharacter->CommandMoveToLocation(CommandData);
@@ -258,12 +269,62 @@ void ARTSPlayerController::Handle_Selection(AActor* ActorTOSelect)
 		Server_ClearSelected();
 	}
 }
+void ARTSPlayerController::Server_Select_Implementation(AActor* ActorToSelect)
+{
+
+	if (ActorToSelect == nullptr) return;
+
+	if (ISelectable* Selectable = Cast<ISelectable>(ActorToSelect))
+	{
+		Selectable->Select();
+		Selected.Add(ActorToSelect);
+		OnRep_Selected();
+	}
+}
+
+void ARTSPlayerController::Server_ClearSelected_Implementation()
+{
+	for (int i = 0; i < Selected.Num(); i++)
+	{
+		if (Selected[i])
+		{
+			if (ISelectable* Selectable = Cast<ISelectable>(Selected[i]))
+			{
+				Selectable->Deselect();
+			}
+		}
+	}
+	Selected.Empty();
+	OnRep_Selected();
+}
 
 void ARTSPlayerController::Handle_Selection(TArray<AActor*> ActorsTOSelect)
 {
 	Server_Select_Group(ActorsTOSelect);
 }
+void ARTSPlayerController::Server_Select_Group_Implementation(const TArray<AActor*>& ActorsToSelect)
+{
+	Server_ClearSelected();
 
+	TArray<AActor*> ValidActors;
+	for (int i = 0; i < ActorsToSelect.Num(); i++)
+	{
+		if (ActorsToSelect[i])
+		{
+			if (ISelectable* Selectable = Cast<ISelectable>(ActorsToSelect[i]))
+			{
+				ValidActors.Add(ActorsToSelect[i]);
+				Selectable->Select();
+			}
+		}
+	}
+
+	Selected.Append(ValidActors);
+	OnRep_Selected();
+
+
+	ValidActors.Empty();
+}
 void ARTSPlayerController::Handle_Deselection(AActor* ActorToDeselect)
 {
 	if (ActorToDeselect && ActorSelected(ActorToDeselect))
@@ -271,12 +332,43 @@ void ARTSPlayerController::Handle_Deselection(AActor* ActorToDeselect)
 		Server_Deselect(ActorToDeselect);
 	}
 }
+void ARTSPlayerController::Server_Deselect_Implementation(AActor* ActorToDeselect)
+{
+	if (ActorToDeselect == nullptr) return;
 
+	if (ISelectable* Selectable = Cast<ISelectable>(ActorToDeselect))
+	{
+		Selectable->Deselect();
+		Selected.Remove(ActorToDeselect);
+		OnRep_Selected();
+	}
+}
 void ARTSPlayerController::Handle_Deselection(TArray<AActor*> ActorsToDeselect)
 {
 	Server_Deselect_Group(ActorsToDeselect);
 }
-
+void ARTSPlayerController::Server_Deselect_Group_Implementation(const TArray<AActor*>& ActorsToDeselect)
+{
+	for (int i = 0; i < ActorsToDeselect.Num(); i++)
+	{
+		if (ActorsToDeselect[i])
+		{
+			for (int j = Selected.Num() - 1; j >= 0; j--)
+			{
+				if (ActorsToDeselect[i] == Selected[j])
+				{
+					if (ISelectable* Selectable = Cast<ISelectable>(ActorsToDeselect[i]))
+					{
+						Selectable->Deselect();
+						Selected.RemoveAt(j);
+						break;
+					}
+				}
+			}
+		}
+	}
+	OnRep_Selected();
+}
 FVector ARTSPlayerController::GetMousePositionOnTerrain() const
 {
 	FVector WorldLocation, WorldDirection;
@@ -316,15 +408,6 @@ FVector ARTSPlayerController::GetMousePositionOnSurface() const
 	return FVector::ZeroVector;
 }
 
-void ARTSPlayerController::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-	if (bPlacementModeEnabled && PlacementPreviewActor != nullptr)
-	{
-		UpdatePlacement();
-	}
-}
 
 bool ARTSPlayerController::ActorSelected(AActor* ActorToCheck) const
 {
@@ -333,93 +416,6 @@ bool ARTSPlayerController::ActorSelected(AActor* ActorToCheck) const
 		return true;
 	}
 	return false;
-}
-
-
-void ARTSPlayerController::Server_Select_Group_Implementation(const TArray<AActor*>& ActorsToSelect)
-{
-	Server_ClearSelected();
-
-	TArray<AActor*> ValidActors;
-	for (int i = 0 ; i < ActorsToSelect.Num(); i++)
-	{
-		if (ActorsToSelect[i])
-		{
-			if (ISelectable* Selectable = Cast<ISelectable>(ActorsToSelect[i]))
-			{
-				ValidActors.Add(ActorsToSelect[i]);
-				Selectable->Select();
-			}
-		}
-	}
-
-	Selected.Append(ValidActors);
-	OnRep_Selected();
-	
-
-	ValidActors.Empty();
-}
-
-void ARTSPlayerController::Server_Select_Implementation(AActor* ActorToSelect)
-{
-
-	if (ActorToSelect == nullptr) return;
-
-	if (ISelectable* Selectable = Cast<ISelectable>(ActorToSelect))
-	{
-		Selectable->Select();
-		Selected.Add(ActorToSelect);
-		OnRep_Selected();
-	}
-}
-
-void ARTSPlayerController::Server_Deselect_Implementation(AActor* ActorToDeselect)
-{
-	if (ActorToDeselect == nullptr) return;
-
-	if (ISelectable* Selectable = Cast<ISelectable>(ActorToDeselect))
-	{
-		Selectable->Deselect();
-		Selected.Remove(ActorToDeselect);
-		OnRep_Selected();
-	}
-}
-void ARTSPlayerController::Server_Deselect_Group_Implementation(const TArray<AActor*>& ActorsToDeselect)
-{
-	for (int i = 0; i < ActorsToDeselect.Num(); i++)
-	{
-		if (ActorsToDeselect[i])
-		{
-			for (int j = Selected.Num() -1; j >= 0; j--)
-			{
-				if (ActorsToDeselect[i] == Selected[j])
-				{
-					if (ISelectable* Selectable = Cast<ISelectable>(ActorsToDeselect[i]))
-					{
-						Selectable->Deselect();
-						Selected.RemoveAt(j);
-						break;
-					}
-				}
-			}
-		}
-	}
-	OnRep_Selected();
-}
-void ARTSPlayerController::Server_ClearSelected_Implementation()
-{
-	for (int i = 0; i < Selected.Num(); i++)
-	{
-		if (Selected[i])
-		{
-			if (ISelectable* Selectable = Cast<ISelectable>(Selected[i]))
-			{
-				Selectable->Deselect();
-			}
-		}
-	}
-	Selected.Empty();
-	OnRep_Selected();
 }
 
 void ARTSPlayerController::OnRep_Selected()

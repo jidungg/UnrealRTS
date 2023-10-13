@@ -2,7 +2,7 @@
 
 
 #include "MyAIController.h"
-#include "TestTopDownCharacter.h"
+#include "BaseUnit.h"
 #include "NiagaraSystem.h"
 #include "NiagaraFunctionLibrary.h"
 #include "Navigation/PathFollowingComponent.h"
@@ -36,7 +36,7 @@ void AMyAIController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
 
-    OwningCharacter = Cast<ATestTopDownCharacter>(InPawn);
+    OwningCharacter = Cast<ABaseUnit>(InPawn);
     UE_LOG(LogTemp, Warning, TEXT(" AMyAIController::OnPossess %s"), *InPawn->GetFName().ToString() );
     if (OwningCharacter)
     {
