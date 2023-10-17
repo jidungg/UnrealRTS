@@ -81,7 +81,11 @@ void ABaseUnit::CreateMoveMarker()
 		UE_LOG(LogTemp, Warning, TEXT("ABaseUnit::CreateMoveMarker"));
 	}
 }
-
+void ABaseUnit::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+	MoveMarker->Destroy();
+}
 void ABaseUnit::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
@@ -98,6 +102,7 @@ void ABaseUnit::Tick(float DeltaSeconds)
 
 	}
 }
+
 void ABaseUnit::SetOrientation(const float DeltaTime)
 {
 	const FRotator InterpolatedRotation = UKismetMathLibrary::RInterpTo(FRotator(GetActorRotation().Pitch, GetActorRotation().Yaw, 0.f), TargertOrientation, DeltaTime, 2.f);
