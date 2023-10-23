@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "AIData.h"
+#include "UnitData.h"
 #include "GameFramework/PlayerController.h"
 #include "RTSPlayerController.generated.h"
 
@@ -94,6 +95,9 @@ protected:
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Player Settings")
 	UDataAsset* PlayerActionsAsset;
 
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Unit Data")
+	UDataAsset* UnitDataAsset;
+
 public:
 	UFUNCTION()
 	bool IsPlacementModeEnabled() const { return bPlacementModeEnabled; }
@@ -112,7 +116,7 @@ protected:
 	void UpdatePlacement() const;
 
 	UFUNCTION(Server, Reliable)
-	void Server_Place(AActor* PlacementPreviewToSpawn);
+	void Server_Place(FPlacementData PlacementData);
 
 	UFUNCTION(Client, Reliable)
 	void EndPlacement();
@@ -122,6 +126,8 @@ protected:
 
 	UPROPERTY()
 	AActor* PlacementPreviewActor;
+
+
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Settings|Placeable")
 	TSubclassOf<AActor> PreviewActorType;

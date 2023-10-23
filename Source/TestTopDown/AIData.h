@@ -21,16 +21,17 @@ struct FCommandData
 
 	FCommandData() : bDragAfterCommand(false), Location(FVector::ZeroVector), Rotation(FRotator::ZeroRotator), Type(CommandMove), Target(nullptr) {}
 	FCommandData(const FVector InLocation, const FRotator InRotation, const ECommandType InType,bool dragAfterCommand =false, AActor* InTarget = nullptr) :
-		Location(InLocation), Rotation(InRotation), Type(InType), bDragAfterCommand(dragAfterCommand), Target(nullptr) {}
+		bDragAfterCommand(dragAfterCommand), Location(InLocation), Rotation(InRotation), Type(InType), Target(nullptr) {}
+
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	bool bDragAfterCommand = false;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	FVector Location;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	FRotator Rotation;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	bool bDragAfterCommand = false;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	TEnumAsByte<ECommandType> Type;

@@ -7,6 +7,7 @@
 #include "MenuSystem/MenuInterface.h"
 #include "Interfaces/OnlineSessionInterface.h"
 #include "OnlineSubsystem.h"
+#include "UnitData.h"
 #include "MOBAGameInstance.generated.h"
 
 /**
@@ -44,6 +45,9 @@ public:
 	void Join(const FString& address);
 	UFUNCTION(Exec)
 	void RefrsehServerList();
+	UFUNCTION(Exec)
+	void DevMode(bool check);
+
 	void StartSession();
 
 private://Online Subsystem Session interface functions
@@ -64,6 +68,8 @@ public:
 	void CheckDefaultSearchOptions();
 	UFUNCTION(Exec)
 	void CheckSearchOptions();
+
+	
 private:
 	TSubclassOf<class UUserWidget> mainMenuClass;
 	class UMainMenu* mainMenu;
@@ -73,4 +79,6 @@ private:
 	TSharedPtr<class FOnlineSessionSearch> sessionSearch;
 	uint32 serverIndex;
 	FString desiredRoomName;
+
+
 };

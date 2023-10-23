@@ -201,6 +201,10 @@ void UMOBAGameInstance::RefrsehServerList()
 	mainMenu->SetServerList(serverData);
 }
 
+void UMOBAGameInstance::DevMode(bool check)
+{
+}
+
 void UMOBAGameInstance::StartSession()
 {
 	if (sessionInterface.IsValid() == false) return;

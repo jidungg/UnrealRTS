@@ -4,6 +4,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "PlayerInputActions.h"
 #include "PlacementPreview.h"
+#include "MOBAGameInstance.h"
 #include "BaseUnit.h"
 
 ARTSPlayerController::ARTSPlayerController(const FObjectInitializer& ObjectInitializer)
@@ -91,24 +92,30 @@ void ARTSPlayerController::Place()
 {
 	if (!IsPlacementModeEnabled() || !PlacementPreviewActor)
 		return;
+	UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::Place  %s"), *PlacementPreviewActor->GetActorGuid().ToString());
 
 	bPlacementModeEnabled = false;
 	SetInputPlacement(false);
-	Server_Place(PlacementPreviewActor);
+	FPlacementData placementData(EUnitType::TestUnit, PlacementPreviewActor->GetActorTransform());
+	Server_Place(placementData);
 }
-void ARTSPlayerController::Server_Place_Implementation(AActor* PlacementPreviewToSpawn)
+void ARTSPlayerController::Server_Place_Implementation(FPlacementData PlacementData)
 {
-	if (const APlacementPreview* Preview = Cast<APlacementPreview>(PlacementPreviewToSpawn))
-	{
-		FTransform SpawnTransfrom;
-		FVector Location = Preview->GetActorLocation();
-		SpawnTransfrom.SetLocation(FVector(Location.X, Location.Y, Location.Z + 100.f));
-		FActorSpawnParameters SpawnParams;
-		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::Server_Place_Implementation 1"));
 
-		ABaseUnit* NewUnit = GetWorld()->SpawnActor<ABaseUnit>(Preview->PlaceableClass, SpawnTransfrom, SpawnParams);
+	FTransform SpawnTransfrom;
+	FVector Location = PlacementData.SpawnTransfrom.GetLocation();
+	SpawnTransfrom.SetLocation(FVector(Location.X, Location.Y, Location.Z + 100.f));
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	if (const UUnitData* UnitData = Cast<UUnitData>(UnitDataAsset))
+	{
+		TSubclassOf<class ABaseUnit> UnitClass = UnitData->TypeToClass[PlacementData.UnitType];
+		ABaseUnit* NewUnit = GetWorld()->SpawnActor<ABaseUnit>(UnitClass, SpawnTransfrom, SpawnParams);
 		if (NewUnit != nullptr)
 		{
+			UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::Server_Place_Implementation SpawnActor success"));
 			NewUnit->SetOwner(this);
 		}
 	}
