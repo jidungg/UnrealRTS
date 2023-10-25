@@ -96,7 +96,7 @@ void ARTSPlayerController::Place()
 
 	bPlacementModeEnabled = false;
 	SetInputPlacement(false);
-	FPlacementData placementData(EUnitType::TestUnit, PlacementPreviewActor->GetActorTransform());
+	FPlacementData placementData(EUnitType::Fox, PlacementPreviewActor->GetActorTransform());
 	Server_Place(placementData);
 }
 void ARTSPlayerController::Server_Place_Implementation(FPlacementData PlacementData)

@@ -11,7 +11,8 @@ UENUM(BlueprintType)
 enum EUnitType
 {
 	TestUnit,
-	Fox
+	Fox,
+	Pig
 };
 
 USTRUCT(BlueprintType)
