@@ -10,6 +10,8 @@
 #include "MenuSystem/MenuWidget.h"
 #include "MenuSystem//MainMenu.h"
 
+#include "ABPlayerState.h"
+
 const static FName SESSION_NAME = NAME_GameSession;
 const static FName ROOM_NAME_KEY = TEXT("Room Name");
 UMOBAGameInstance::UMOBAGameInstance(const FObjectInitializer& ObjectIn ...)
@@ -205,6 +207,8 @@ void UMOBAGameInstance::DevMode(bool check)
 {
 }
 
+
+
 void UMOBAGameInstance::StartSession()
 {
 	if (sessionInterface.IsValid() == false) return;
@@ -364,6 +368,11 @@ void UMOBAGameInstance::CheckSearchOptions()
 	sessionSearch->QuerySettings.Get(SEARCH_EMPTY_SERVERS_ONLY, isEmptyServersOnly);
 	UE_LOG(LogTemp, Warning, TEXT("isEmptyServersOnly, %d"), isEmptyServersOnly);
 
+}
+
+void UMOBAGameInstance::CheckRace()
+{
+	UE_LOG(LogTemp, Warning, TEXT("UMOBAGameInstance::CheckRace %d"), Race);
 }
 
 

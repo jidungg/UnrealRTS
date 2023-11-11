@@ -45,10 +45,19 @@ private:
 	class UWidget* joinMenu;
 	UPROPERTY(meta = (BindWidget))
 	class UWidget* hostMenu;
+	UPROPERTY(meta = (BindWidget))
+	class UWidget* myDeckMenu;
 
+	UPROPERTY(meta = (BindWidget))
+	class UButton* quitButton;
 
 	UPROPERTY(meta = (BindWidget))
 	class UButton* hostMenuButton;
+	UPROPERTY(meta = (BindWidget))
+	class UButton* joinMenuButton;
+	UPROPERTY(meta = (BindWidget))
+	class UButton* myDeckButton;
+
 	UPROPERTY(meta = (BindWidget))
 	class UButton* cancleHostMenuButton;
 	UPROPERTY(meta = (BindWidget))
@@ -56,38 +65,45 @@ private:
 	UPROPERTY(meta = (BindWidget))
 	class UEditableTextBox* roomNameTextBox;
 
-
-	UPROPERTY(meta = (BindWidget))
-	class UButton* joinMenuButton;
 	UPROPERTY(meta = (BindWidget))
 	class UButton* cancleJoinMenuButton;
 	UPROPERTY(meta = (BindWidget))
 	class UButton* joinButton;
 
 	UPROPERTY(meta = (BindWidget))
-	class UButton* quitButton;
+	class UButton* SaveDeckButton;
+	UPROPERTY(meta = (BindWidget))
+	class UButton* ExitMyDeckButton;
 
 	UPROPERTY(meta = (BindWidget))
 	class UPanelWidget* serverList;
 
 
+
+	UFUNCTION()
+	void OnQuitButtonClicked();
+
 	UFUNCTION()
 	void OnJoinMenuButtonClicked();
+	UFUNCTION()
+	void OnHostMenuButtonClicked();
+	UFUNCTION()
+	void OnMyDeckMenuButtonClicked();
+
 	UFUNCTION()
 	void OnJoinButtonClicked();
 	UFUNCTION()
 	void OnCancleJoinMenuClicked();
 
 	UFUNCTION()
-	void OnHostMenuButtonClicked();
-	UFUNCTION()
 	void OnHostButtonClicked();
 	UFUNCTION()
 	void OnCancleHostMenuClicked();
 
-
 	UFUNCTION()
-	void OnQuitButtonClicked();
+	void OnSaveDeckButtonClicked();
+	UFUNCTION()
+	void OnExitMyDeckButtonClicked();
 
 private:
 	TSubclassOf<class UUserWidget> serverRowClass;

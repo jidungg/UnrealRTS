@@ -92,36 +92,40 @@ void ARTSPlayerController::Place()
 {
 	if (!IsPlacementModeEnabled() || !PlacementPreviewActor)
 		return;
-	UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::Place  %s"), *PlacementPreviewActor->GetActorGuid().ToString());
-
 	bPlacementModeEnabled = false;
 	SetInputPlacement(false);
-	FPlacementData placementData(EUnitType::Fox, PlacementPreviewActor->GetActorTransform());
-	Server_Place(placementData);
+	Server_Place(EUnitType::Fox, PlacementPreviewActor->GetActorTransform());
 }
-void ARTSPlayerController::Server_Place_Implementation(FPlacementData PlacementData)
+void ARTSPlayerController::Server_Place_Implementation(EUnitType unitType, FTransform spawnTransform)
 {
-	UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::Server_Place_Implementation 1"));
 
+	SpawnUnit(unitType, spawnTransform);
+
+	EndPlacement();
+}
+void ARTSPlayerController::SpawnUnit(EUnitType unitType, FTransform spawnTransform)
+{
 	FTransform SpawnTransfrom;
-	FVector Location = PlacementData.SpawnTransfrom.GetLocation();
+	FVector Location = spawnTransform.GetLocation();
 	SpawnTransfrom.SetLocation(FVector(Location.X, Location.Y, Location.Z + 100.f));
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 	if (const UUnitData* UnitData = Cast<UUnitData>(UnitDataAsset))
 	{
-		TSubclassOf<class ABaseUnit> UnitClass = UnitData->TypeToClass[PlacementData.UnitType];
+
+		TSubclassOf<class ABaseUnit> UnitClass = UnitData->TypeToClass[unitType];
 		ABaseUnit* NewUnit = GetWorld()->SpawnActor<ABaseUnit>(UnitClass, SpawnTransfrom, SpawnParams);
+
 		if (NewUnit != nullptr)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::Server_Place_Implementation SpawnActor success"));
+
+			UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::SpawnUnit %s"), *UnitClass->GetClassPathName().ToString());
 			NewUnit->SetOwner(this);
 		}
 	}
-
-	EndPlacement();
 }
+
 void ARTSPlayerController::PlaceCancel()
 {
 	if (!IsPlacementModeEnabled() || !PlacementPreviewActor)
@@ -131,6 +135,7 @@ void ARTSPlayerController::PlaceCancel()
 	SetInputPlacement(false);
 	EndPlacement();
 }
+
 
 
 void ARTSPlayerController::EndPlacement_Implementation()

@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Selectable.h"
-#include "AIData.h"
+#include "Data/AIData.h"
 #include "GameFramework/Character.h"
 #include "BaseUnit.generated.h"
 

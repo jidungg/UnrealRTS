@@ -14,7 +14,6 @@ void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 	{
 		GetWorldTimerManager().SetTimer(gameStartTimer,this,&ALobbyGameMode::StartGame,10);
 	}
-
 }
 
 void ALobbyGameMode::Logout(AController* Exiting)
@@ -23,6 +22,7 @@ void ALobbyGameMode::Logout(AController* Exiting)
 	currentPlayerCount--;
 	UE_LOG(LogTemp, Warning, TEXT("ALobbyGameMode::Logout currentPlayerCount : %d"), currentPlayerCount);
 }
+
 
 void ALobbyGameMode::StartGame()
 {

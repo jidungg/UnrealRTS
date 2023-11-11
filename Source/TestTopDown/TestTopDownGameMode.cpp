@@ -3,36 +3,41 @@
 #include "TestTopDownGameMode.h"
 #include "TestTopDownPlayerController.h"
 #include "BaseUnit.h"
+#include "MOBAGameInstance.h"
+#include "Data/RaceData.h"
+#include "RTSPlayerController.h"
 #include "UObject/ConstructorHelpers.h"
-//
-//void ATestTopDownGameMode::BeginPlay()
-//{
-//	Super::BeginPlay();
-//
-//	FFileHelper::SaveStringToFile(TEXT(RAW_APP_ID), TEXT("steam_appid.txt"));
-//
-//	SteamAPI_RestartAppIfNecessary(atoi(APP_ID));
-//
-//	if (SteamAPI_Init())
-//		myId = SteamUser()->GetSteamID();
-//}
+
 
 ATestTopDownGameMode::ATestTopDownGameMode()
 {
 	// use our custom PlayerController class
 	PlayerControllerClass = ATestTopDownPlayerController::StaticClass();
 
-	//// set default pawn class to our Blueprinted character
-	//static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/TopDown/Blueprints/BP_TopDownCharacter"));
-	//if (PlayerPawnBPClass.Class != nullptr)
-	//{
-	//	DefaultPawnClass = PlayerPawnBPClass.Class;
-	//}
+}
 
-	//// set default controller to our Blueprinted controller
-	//static ConstructorHelpers::FClassFinder<APlayerController> PlayerControllerBPClass(TEXT("/Game/TopDown/Blueprints/BP_TopDownPlayerController"));
-	//if(PlayerControllerBPClass.Class != NULL)
-	//{
-	//	PlayerControllerClass = PlayerControllerBPClass.Class;
-	//}
+void ATestTopDownGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+
+	SpawnBasicWorker();
+}
+
+void ATestTopDownGameMode::SpawnBasicWorker()
+{
+	auto GameInstance = Cast<UMOBAGameInstance>(GetGameInstance());
+	if (GameInstance == nullptr) return;
+
+	auto PlayerControler = Cast<ARTSPlayerController>(GameInstance->GetPrimaryPlayerController());
+	if (PlayerControler == nullptr) return;
+
+	auto RaceData = Cast<URaceData>(RaceDataAsset);
+	if (RaceData == nullptr) return;
+
+	auto PlayerStart = FindPlayerStart(PlayerControler);
+	if (PlayerStart == nullptr) return;
+
+	UE_LOG(LogTemp, Warning, TEXT("ATestTopDownGameMode::SpawnBasicWorker %d, %d"), GameInstance->Race, RaceData->GetBasicWorker(GameInstance->Race));
+	PlayerControler->SpawnUnit(RaceData->GetBasicWorker(GameInstance->Race), PlayerStart->GetActorTransform());
+
 }

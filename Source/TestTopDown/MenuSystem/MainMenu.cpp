@@ -16,7 +16,31 @@ UMainMenu::UMainMenu()
 	if (serverRowBPClass.Class == nullptr) return;
 	serverRowClass = serverRowBPClass.Class;
 }
+bool UMainMenu::Initialize()
+{
+	if (Super::Initialize() == false) return false;
+	if (hostButton == nullptr) return false;
+	if (joinMenuButton == nullptr) return false;
+	if (cancleJoinMenuButton == nullptr) return false;
+	if (joinButton == nullptr) return false;
+	if (quitButton == nullptr) return false;
+	if (hostMenuButton == nullptr) return false;
 
+	quitButton->OnClicked.AddDynamic(this, &UMainMenu::OnQuitButtonClicked);
+	hostMenuButton->OnClicked.AddDynamic(this, &UMainMenu::OnHostMenuButtonClicked);
+	joinMenuButton->OnClicked.AddDynamic(this, &UMainMenu::OnJoinMenuButtonClicked);
+	myDeckButton->OnClicked.AddDynamic(this, &UMainMenu::OnMyDeckMenuButtonClicked);
+
+	hostButton->OnClicked.AddDynamic(this, &UMainMenu::OnHostButtonClicked);
+	cancleHostMenuButton->OnClicked.AddDynamic(this, &UMainMenu::OnCancleHostMenuClicked);
+	cancleJoinMenuButton->OnClicked.AddDynamic(this, &UMainMenu::OnCancleJoinMenuClicked);
+	joinButton->OnClicked.AddDynamic(this, &UMainMenu::OnJoinButtonClicked);
+
+	SaveDeckButton->OnClicked.AddDynamic(this, &UMainMenu::OnSaveDeckButtonClicked);
+	ExitMyDeckButton->OnClicked.AddDynamic(this, &UMainMenu::OnExitMyDeckButtonClicked);
+
+	return true;
+}
 void UMainMenu::SetServerList(TArray<FServerData>& serverData)
 {
 	UWorld* world = this->GetWorld();
@@ -54,27 +78,7 @@ void UMainMenu::UpdateChildren()
 	}
 }
 
-bool UMainMenu::Initialize()
-{
-	UE_LOG(LogTemp, Warning, TEXT("UMainMenu::Initialize"));
-	if (Super::Initialize() == false) return false;
-	if (hostButton == nullptr) return false;
-	if (joinMenuButton == nullptr) return false;
-	if (cancleJoinMenuButton == nullptr) return false;
-	if (joinButton == nullptr) return false;
-	if (quitButton == nullptr) return false;
-	if (hostMenuButton == nullptr) return false;
 
-	hostMenuButton->OnClicked.AddDynamic(this, &UMainMenu::OnHostMenuButtonClicked);
-	hostButton->OnClicked.AddDynamic(this, &UMainMenu::OnHostButtonClicked);
-	cancleHostMenuButton->OnClicked.AddDynamic(this, &UMainMenu::OnCancleHostMenuClicked);
-	joinMenuButton->OnClicked.AddDynamic(this, &UMainMenu::OnJoinMenuButtonClicked);
-	cancleJoinMenuButton->OnClicked.AddDynamic(this, &UMainMenu::OnCancleJoinMenuClicked);
-	joinButton->OnClicked.AddDynamic(this, &UMainMenu::OnJoinButtonClicked);
-	quitButton->OnClicked.AddDynamic(this, &UMainMenu::OnQuitButtonClicked);
-
-	return true;
-}
 
 void UMainMenu::OnJoinMenuButtonClicked()
 {
@@ -102,16 +106,31 @@ void UMainMenu::OnHostMenuButtonClicked()
 	if (menuSwitcher == nullptr) return;
 	if (hostMenu == nullptr) return;
 	menuSwitcher->SetActiveWidget(hostMenu);
-
+}
+void UMainMenu::OnMyDeckMenuButtonClicked()
+{
+	if (menuSwitcher == nullptr) return;
+	if (myDeckMenu == nullptr) return;
+	menuSwitcher->SetActiveWidget(myDeckMenu);
 }
 void UMainMenu::OnHostButtonClicked()
 {
 	if (menuInterface == nullptr) return;
 	if (roomNameTextBox == nullptr) return;
-	UE_LOG(LogTemp, Warning, TEXT("Menu OnHostButtonClicked"));
 	menuInterface->OnHostButtonClicked(roomNameTextBox->GetText().ToString());
 }
 void UMainMenu::OnCancleHostMenuClicked()
+{
+	if (menuSwitcher == nullptr) return;
+	if (mainMenu == nullptr) return;
+	menuSwitcher->SetActiveWidget(mainMenu);
+}
+
+void UMainMenu::OnSaveDeckButtonClicked()
+{
+}
+
+void UMainMenu::OnExitMyDeckButtonClicked()
 {
 	if (menuSwitcher == nullptr) return;
 	if (mainMenu == nullptr) return;
@@ -124,5 +143,4 @@ void UMainMenu::OnQuitButtonClicked()
 	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
 	if (PlayerController == nullptr) return;
 	UE_LOG(LogTemp, Warning, TEXT("ConsoleCommand(quit)"));
-	PlayerController->ConsoleCommand("quit");
 }
