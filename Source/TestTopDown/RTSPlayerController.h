@@ -1,8 +1,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "AIData.h"
-#include "UnitData.h"
+#include "Data/AIData.h"
+#include "Data/UnitData.h"
 #include "GameFramework/PlayerController.h"
 #include "RTSPlayerController.generated.h"
 
@@ -111,12 +111,15 @@ public:
 	UFUNCTION()
 	void PlaceCancel();
 
+	UFUNCTION()
+	void SpawnUnit(EUnitType unitType, FTransform spawnTransform);
+
 protected:
 	UFUNCTION()
 	void UpdatePlacement() const;
 
 	UFUNCTION(Server, Reliable)
-	void Server_Place(FPlacementData PlacementData);
+	void Server_Place(EUnitType unitType, FTransform spawnTransform);
 
 	UFUNCTION(Client, Reliable)
 	void EndPlacement();

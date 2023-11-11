@@ -78,7 +78,6 @@ void ABaseUnit::CreateMoveMarker()
 	if (UWorld* WorldContext = GetWorld())
 	{
 		MoveMarker = WorldContext->SpawnActor<AActor>(MoveMarkerClass, GetPositionTransform(GetActorLocation()), Params);
-		UE_LOG(LogTemp, Warning, TEXT("ABaseUnit::CreateMoveMarker"));
 	}
 }
 void ABaseUnit::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -96,7 +95,6 @@ void ABaseUnit::Tick(float DeltaSeconds)
 
 		if (IsOrientated())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Orientated"));
 			ShouldOrientate = 0;
 		}
 
@@ -215,7 +213,6 @@ void ABaseUnit::CommandMove(const FCommandData CommandData)
 		return;
 	}
 	MyAIController->OnReachedDestination.Clear();
-	UE_LOG(LogTemp, Warning, TEXT("ABaseUnit::CommandMove %d %s"), CommandData.bDragAfterCommand, *CommandData.Rotation.ToString());
 	MyAIController->OnReachedDestination.AddDynamic(this, &ABaseUnit::DestinationReached);
 	MyAIController->CommandMove(CommandData);
 	SetMoveMarkerLocation(CommandData.Location);
@@ -227,7 +224,6 @@ void ABaseUnit::SetWalk() const
 {
 	if (CharacterMoveComp)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("ABaseUnit::SetWalk"));
 		CharacterMoveComp->MaxWalkSpeed = MaxSpeed * 0.5f;
 	}
 }
@@ -236,7 +232,6 @@ void ABaseUnit::SetRun() const
 {
 	if (CharacterMoveComp)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("ABaseUnit::SetRun"));
 		CharacterMoveComp->MaxWalkSpeed = MaxSpeed;
 	}
 }
@@ -245,7 +240,6 @@ void ABaseUnit::SetSprint() const
 {
 	if (CharacterMoveComp)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("ABaseUnit::SetSprint"));
 		CharacterMoveComp->MaxWalkSpeed = MaxSpeed * 1.25f;
 	}
 }
@@ -259,7 +253,6 @@ void ABaseUnit::DestinationReached(const FCommandData CommandData)
 	
 	if (CommandData.bDragAfterCommand)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("ABaseUnit::DestinationReached %d %s"), CommandData.bDragAfterCommand, *CommandData.Rotation.ToString());
 		TargertOrientation = CommandData.Rotation;
 		ShouldOrientate = 1;
 	}

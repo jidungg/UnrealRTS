@@ -7,7 +7,8 @@
 #include "MenuSystem/MenuInterface.h"
 #include "Interfaces/OnlineSessionInterface.h"
 #include "OnlineSubsystem.h"
-#include "UnitData.h"
+#include "Data/UnitData.h"
+#include "Data/RaceData.h"
 #include "MOBAGameInstance.generated.h"
 
 /**
@@ -48,6 +49,7 @@ public:
 	UFUNCTION(Exec)
 	void DevMode(bool check);
 
+
 	void StartSession();
 
 private://Online Subsystem Session interface functions
@@ -68,8 +70,9 @@ public:
 	void CheckDefaultSearchOptions();
 	UFUNCTION(Exec)
 	void CheckSearchOptions();
-
-	
+	UFUNCTION(Exec)
+	void CheckRace();
+	TEnumAsByte<ERaceType> Race;
 private:
 	TSubclassOf<class UUserWidget> mainMenuClass;
 	class UMainMenu* mainMenu;

@@ -23,4 +23,5 @@ private:
 
 	uint32 currentPlayerCount = 0;
 	FTimerHandle gameStartTimer;
+
 };

@@ -15,18 +15,6 @@ enum EUnitType
 	Pig
 };
 
-USTRUCT(BlueprintType)
-struct FPlacementData
-{
-	GENERATED_BODY()
-	FPlacementData() : UnitType(EUnitType::TestUnit), SpawnTransfrom(FTransform()) {}
-	FPlacementData(EUnitType unitType, FTransform spawnTransform) :
-		UnitType(unitType), SpawnTransfrom(spawnTransform)
-	{}
-
-	EUnitType UnitType;
-	FTransform SpawnTransfrom;
-};
 
 /**
  * 
