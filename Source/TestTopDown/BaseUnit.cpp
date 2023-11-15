@@ -15,7 +15,6 @@
 
 ABaseUnit::ABaseUnit()
 {
-	UE_LOG(LogTemp, Warning, TEXT("ABaseUnit::ABaseUnit "));
 	// Set size for player capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 
@@ -61,7 +60,6 @@ ABaseUnit::ABaseUnit()
 void ABaseUnit::BeginPlay()
 {
 	Super::BeginPlay();
-	UE_LOG(LogTemp, Warning, TEXT(" ABaseUnit::BeginPlay "));
 	CreateMoveMarker();
 	MoveMarker->SetActorHiddenInGame(true);
 }

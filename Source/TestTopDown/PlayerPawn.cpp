@@ -14,6 +14,9 @@
 #include "EnhancedInputComponent.h"
 #include "PlayerInputActions.h"
 #include "EngineUtils.h"
+#include "MOBAGameInstance.h"
+#include "Data/RaceData.h"
+#include "TestTopDownGameMode.h"
 #include "BaseUnit.h"
 
 // Sets default values
@@ -34,6 +37,8 @@ APlayerPawn::APlayerPawn()
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
 	CameraComponent->SetupAttachment(SpringArmComponent);
 
+	//ConstructorHelpers::FObjectFinder<UDataAsset> RaceDataObj(TEXT("/Game/TopDown/Data/DA_RaceData.DA_RaceData"));
+	//RaceDataAsset = RaceDataObj.Object;
 }
 
 
@@ -82,7 +87,7 @@ void APlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 void APlayerPawn::BeginPlay()
 {
 	Super::BeginPlay();
-
+	UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::BeginPlay"));
 	TargetLocation = GetActorLocation();
 	TargetZoom = 3000.f;
 
@@ -92,11 +97,11 @@ void APlayerPawn::BeginPlay()
 	PlayerController = Cast<ARTSPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
 
 	CreateSelectionBox();
-
 }
 
 void APlayerPawn::CreateSelectionBox()
 {
+	UE_LOG(LogTemp, Warning, TEXT("ATestTopDownGameMode::CreateSelectionBox"));
 	if (SelectionBoxClass == nullptr)return;
 
 	UWorld* World = GetWorld();
@@ -524,3 +529,5 @@ void APlayerPawn::CtrlCommand(const FInputActionValue& Value)
 	UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::CtrlCommand"));
 	PlayerController->CommandSelected(CreateCommandData(ECommandType::CommandMoveAttack));
 }
+
+

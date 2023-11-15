@@ -89,7 +89,6 @@ protected://Mouse input
 	UPROPERTY()
 	class ARTSPlayerController* PlayerController;
 
-
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Settings|Mouse")
 	TSubclassOf<class ASelectionBox> SelectionBoxClass;
 
@@ -181,4 +180,6 @@ protected://Mouse input
 
 	UFUNCTION()
 	void CtrlCommand(const FInputActionValue& Value);
+
+
 };

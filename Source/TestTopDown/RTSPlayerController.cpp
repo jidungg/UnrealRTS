@@ -5,6 +5,9 @@
 #include "PlayerInputActions.h"
 #include "PlacementPreview.h"
 #include "MOBAGameInstance.h"
+#include "Data/RaceData.h"
+#include "TestTopDownGameMode.h"
+#include "Kismet/GameplayStatics.h"
 #include "BaseUnit.h"
 
 ARTSPlayerController::ARTSPlayerController(const FObjectInitializer& ObjectInitializer)
@@ -14,15 +17,36 @@ ARTSPlayerController::ARTSPlayerController(const FObjectInitializer& ObjectIniti
 void ARTSPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-
+	UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::BeginPlay"));
 	FInputModeGameAndUI InputMode;
 	InputMode.SetHideCursorDuringCapture(false);
 	SetInputMode(InputMode);
 	bShowMouseCursor = true;
 	bEnableClickEvents = true;
 	bEnableMouseOverEvents = true;
-}
 
+	GameInstance = Cast<UMOBAGameInstance>(GetGameInstance());
+	if (GameInstance == nullptr) return;
+
+	if (IsLocalPlayerController())
+	{
+		Server_SpawnBasicWorker(GameInstance->Race);
+	}
+}
+void ARTSPlayerController::Server_SpawnBasicWorker_Implementation(ERaceType RaceType)
+{
+	UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::SpawnBasicWorker1"));
+	auto RaceData = Cast<URaceData>(RaceDataAsset);
+	if (RaceData == nullptr) return;
+	UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::SpawnBasicWorker2"));
+	auto GameMode = UGameplayStatics::GetGameMode(GetWorld());
+	if (GameMode == nullptr) return;
+	UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::SpawnBasicWorker3"));
+	auto PlayerStart = GameMode->FindPlayerStart(this);
+	if (PlayerStart == nullptr) return;
+	UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::SpawnBasicWorker %d, %d"), RaceType, RaceData->GetBasicWorker(RaceType));
+	SpawnUnit(RaceData->GetBasicWorker(RaceType), PlayerStart->GetActorTransform());
+}
 void ARTSPlayerController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -95,13 +119,11 @@ void ARTSPlayerController::Place()
 	bPlacementModeEnabled = false;
 	SetInputPlacement(false);
 	Server_Place(EUnitType::Fox, PlacementPreviewActor->GetActorTransform());
+	EndPlacement();
 }
 void ARTSPlayerController::Server_Place_Implementation(EUnitType unitType, FTransform spawnTransform)
 {
-
 	SpawnUnit(unitType, spawnTransform);
-
-	EndPlacement();
 }
 void ARTSPlayerController::SpawnUnit(EUnitType unitType, FTransform spawnTransform)
 {
