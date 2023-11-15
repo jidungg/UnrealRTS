@@ -24,10 +24,7 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
-	void SpawnBasicWorker();
 
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Race Data")
-	UDataAsset* RaceDataAsset;
 	//static constexpr char* APP_ID = RAW_APP_ID;
 	//CSteamID myId;
 };

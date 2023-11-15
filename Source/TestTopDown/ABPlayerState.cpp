@@ -5,6 +5,7 @@
 
 AABPlayerState::AABPlayerState()
 {
+	
 }
 
 void AABPlayerState::InitPlayerData()

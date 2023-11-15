@@ -22,7 +22,6 @@ void ATestTopDownPlayerController::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
-	UE_LOG(LogTemp, Warning, TEXT("ATestTopDownPlayerController::BeginPlay "));
 	//Add Input Mapping Context
 	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
 	{

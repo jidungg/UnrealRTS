@@ -18,6 +18,7 @@ public:
 	AABPlayerState();
 	void InitPlayerData();
 
+
 protected:
 
 };

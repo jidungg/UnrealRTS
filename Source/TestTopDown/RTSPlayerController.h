@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "Data/AIData.h"
 #include "Data/UnitData.h"
+#include "Data/RaceData.h"
 #include "GameFramework/PlayerController.h"
 #include "RTSPlayerController.generated.h"
 
@@ -34,6 +35,10 @@ protected:
 	virtual void BeginPlay() override;
 
 	virtual void Tick(float DeltaTime) override;
+
+	UFUNCTION()
+	void UpdatePlacement() const;
+
 	UFUNCTION()
 	bool ActorSelected(AActor* ActorToCheck) const;
 	UFUNCTION(Server, Reliable)
@@ -46,14 +51,18 @@ protected:
 	void Server_Deselect_Group(const TArray<AActor*>& ActorsToSelect);
 	UFUNCTION(Server, Reliable)
 	void Server_ClearSelected();
+	UFUNCTION(Server, Reliable)
+	void Server_Place(EUnitType unitType, FTransform spawnTransform);
+	UFUNCTION(Server, Reliable)
+	void Server_SpawnBasicWorker(ERaceType RaceType);
+
+	UFUNCTION(Client, Reliable)
+	void EndPlacement();
+
 	UFUNCTION()
 	void OnRep_Selected();
 
-	UPROPERTY(ReplicatedUsing = OnRep_Selected)
-	TArray<AActor*> Selected;
 
-	UPROPERTY()
-	FSelectedUpdatedDelegate OnSelectedUpdated;
 
 public:
 	UFUNCTION()
@@ -92,12 +101,6 @@ public://enhanced input
 protected:
 	virtual void SetupInputComponent() override;
 
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Player Settings")
-	UDataAsset* PlayerActionsAsset;
-
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Unit Data")
-	UDataAsset* UnitDataAsset;
-
 public:
 	UFUNCTION()
 	bool IsPlacementModeEnabled() const { return bPlacementModeEnabled; }
@@ -109,20 +112,19 @@ public:
 	void Place();
 
 	UFUNCTION()
-	void PlaceCancel();
-
-	UFUNCTION()
 	void SpawnUnit(EUnitType unitType, FTransform spawnTransform);
 
-protected:
 	UFUNCTION()
-	void UpdatePlacement() const;
+	void PlaceCancel();
 
-	UFUNCTION(Server, Reliable)
-	void Server_Place(EUnitType unitType, FTransform spawnTransform);
+protected:
+	class UMOBAGameInstance* GameInstance;
 
-	UFUNCTION(Client, Reliable)
-	void EndPlacement();
+	UPROPERTY(ReplicatedUsing = OnRep_Selected)
+	TArray<AActor*> Selected;
+
+	UPROPERTY()
+	FSelectedUpdatedDelegate OnSelectedUpdated;
 
 	UPROPERTY()
 	bool bPlacementModeEnabled;
@@ -130,8 +132,16 @@ protected:
 	UPROPERTY()
 	AActor* PlacementPreviewActor;
 
-
-
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Settings|Placeable")
 	TSubclassOf<AActor> PreviewActorType;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Player Settings")
+	UDataAsset* PlayerActionsAsset;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Unit Data")
+	UDataAsset* UnitDataAsset;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Race Data")
+	UDataAsset* RaceDataAsset;
+
 };
