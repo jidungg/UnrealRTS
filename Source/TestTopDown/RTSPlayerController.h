@@ -68,6 +68,9 @@ public:
 	UFUNCTION()
 	void CommandSelected(FCommandData CommandData);
 
+	UFUNCTION()
+	void SetMoveMarkerLocations(FVector Location);
+
 protected:
 	UFUNCTION(Server, Reliable)
 	void Server_CommandSelected(FCommandData CommandData);
@@ -144,4 +147,7 @@ protected:
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Race Data")
 	UDataAsset* RaceDataAsset;
 
+	/** FX Class that we will spawn when clicking */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	class UNiagaraSystem* FXCursor;
 };

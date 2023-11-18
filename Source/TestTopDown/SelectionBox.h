@@ -56,6 +56,9 @@ protected:
 	TArray<AActor*> CenterInBox;
 
 private:
+	UFUNCTION()
+		bool IsCenterInBox(FVector ActorLocation);
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UBoxComponent* BoxCollider;
 

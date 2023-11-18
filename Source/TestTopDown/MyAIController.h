@@ -30,9 +30,7 @@ public:
 	UPROPERTY()
 	FReachedDestinationDelegate OnReachedDestination;
 
-	/** FX Class that we will spawn when clicking */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
-	class UNiagaraSystem* FXCursor;
+
 protected:
 	virtual void OnPossess(class APawn* InPawn) override;
 	virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
