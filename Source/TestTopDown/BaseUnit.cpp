@@ -32,6 +32,7 @@ ABaseUnit::ABaseUnit()
 		CharacterMoveComp->bConstrainToPlane = true;
 		CharacterMoveComp->bSnapToPlaneAtStart = true;
 		MaxSpeed = CharacterMoveComp->MaxWalkSpeed;
+		
 	}
 
 
@@ -60,28 +61,36 @@ ABaseUnit::ABaseUnit()
 void ABaseUnit::BeginPlay()
 {
 	Super::BeginPlay();
+	UE_LOG(LogTemp, Warning, TEXT("ABaseUnit::BeginPlay"));
 	CreateMoveMarker();
 	MoveMarker->SetActorHiddenInGame(true);
 }
 
 void ABaseUnit::CreateMoveMarker()
 {
-	if (!MoveMarkerClass)
+	if (MoveMarkerClass == nullptr)
 		return;
-
+	UE_LOG(LogTemp, Warning, TEXT("ABaseUnit::CreateMoveMarker 1"));
 	FActorSpawnParameters Params;
 	Params.Instigator = this;
 	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 	if (UWorld* WorldContext = GetWorld())
 	{
+		UE_LOG(LogTemp, Warning, TEXT("ABaseUnit::CreateMoveMarker 2"));
 		MoveMarker = WorldContext->SpawnActor<AActor>(MoveMarkerClass, GetPositionTransform(GetActorLocation()), Params);
 	}
 }
-void ABaseUnit::EndPlay(const EEndPlayReason::Type EndPlayReason)
+
+void ABaseUnit::Destroyed()
 {
-	Super::EndPlay(EndPlayReason);
-	MoveMarker->Destroy();
+	Super::Destroyed();
+	UE_LOG(LogTemp, Warning, TEXT("ABaseUnit::Destroyed 1"));
+	if (MoveMarker != nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ABaseUnit::Destroyed 2"));
+		MoveMarker->Destroy();
+	}
 }
 void ABaseUnit::Tick(float DeltaSeconds)
 {
@@ -113,13 +122,16 @@ bool ABaseUnit::IsOrientated() const
 		return true;
 	return false;
 }
+
 void ABaseUnit::SetMoveMarkerLocation(const FVector Location)
 {
+	UE_LOG(LogTemp, Warning, TEXT("ABaseUnit::SetMoveMarkerLocation 0"));
 	if (!MoveMarkerClass)
 		return;
+	UE_LOG(LogTemp, Warning, TEXT("ABaseUnit::SetMoveMarkerLocation 1"));
 	if (!MoveMarker)
 		return;
-
+	UE_LOG(LogTemp, Warning, TEXT("ABaseUnit::SetMoveMarkerLocation 2"));
 	MoveMarker->SetActorLocation(GetPositionTransform(Location).GetLocation());
 	MoveMarker->SetActorHiddenInGame(false);
 }
@@ -175,7 +187,16 @@ void ABaseUnit::CommandMoveToLocation(const FCommandData CommandData)
 
 	CommandMove(CommandData);  
 }
-
+void ABaseUnit::CommandMove(const FCommandData CommandData)
+{
+	if (!MyAIController)
+	{
+		return;
+	}
+	MyAIController->OnReachedDestination.Clear();
+	MyAIController->OnReachedDestination.AddDynamic(this, &ABaseUnit::DestinationReached);
+	MyAIController->CommandMove(CommandData);
+}
 
 FTransform ABaseUnit::GetPositionTransform(const FVector Position) const
 {
@@ -204,17 +225,7 @@ FTransform ABaseUnit::GetPositionTransform(const FVector Position) const
 	return FTransform::Identity;
 }
 
-void ABaseUnit::CommandMove(const FCommandData CommandData)
-{
-	if (!MyAIController)
-	{
-		return;
-	}
-	MyAIController->OnReachedDestination.Clear();
-	MyAIController->OnReachedDestination.AddDynamic(this, &ABaseUnit::DestinationReached);
-	MyAIController->CommandMove(CommandData);
-	SetMoveMarkerLocation(CommandData.Location);
-}
+
 
 
 
@@ -244,11 +255,16 @@ void ABaseUnit::SetSprint() const
 
 void ABaseUnit::DestinationReached(const FCommandData CommandData)
 {
+	RPC_OnDestinationReached(CommandData);
+}
+
+void ABaseUnit::RPC_OnDestinationReached_Implementation(const FCommandData CommandData)
+{
 	if (MoveMarker)
 	{
 		MoveMarker->SetActorHiddenInGame(true);
 	}
-	
+
 	if (CommandData.bDragAfterCommand)
 	{
 		TargertOrientation = CommandData.Rotation;
@@ -259,7 +275,4 @@ void ABaseUnit::DestinationReached(const FCommandData CommandData)
 		TargertOrientation = GetActorRotation();
 		ShouldOrientate = 0;
 	}
-
-
 }
-

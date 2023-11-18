@@ -7,6 +7,8 @@
 #include "MOBAGameInstance.h"
 #include "Data/RaceData.h"
 #include "TestTopDownGameMode.h"
+#include "NiagaraSystem.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "BaseUnit.h"
 
@@ -35,13 +37,10 @@ void ARTSPlayerController::BeginPlay()
 }
 void ARTSPlayerController::Server_SpawnBasicWorker_Implementation(ERaceType RaceType)
 {
-	UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::SpawnBasicWorker1"));
 	auto RaceData = Cast<URaceData>(RaceDataAsset);
 	if (RaceData == nullptr) return;
-	UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::SpawnBasicWorker2"));
 	auto GameMode = UGameplayStatics::GetGameMode(GetWorld());
 	if (GameMode == nullptr) return;
-	UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::SpawnBasicWorker3"));
 	auto PlayerStart = GameMode->FindPlayerStart(this);
 	if (PlayerStart == nullptr) return;
 	UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::SpawnBasicWorker %d, %d"), RaceType, RaceData->GetBasicWorker(RaceType));
@@ -240,7 +239,12 @@ void ARTSPlayerController::CommandSelected(FCommandData CommandData)
 {
 	UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::CommandSelected %d"), CommandData.bDragAfterCommand);
 	Server_CommandSelected(CommandData);
+
+	UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, FXCursor, CommandData.Location, FRotator::ZeroRotator, FVector(1.f, 1.f, 1.f), true, true, ENCPoolMethod::None, true);
+	SetMoveMarkerLocations(CommandData.Location);
 }
+
+
 
 void ARTSPlayerController::Server_CommandSelected_Implementation(FCommandData CommandData)
 {
@@ -255,7 +259,17 @@ void ARTSPlayerController::Server_CommandSelected_Implementation(FCommandData Co
 		}
 	}
 }
-
+void ARTSPlayerController::SetMoveMarkerLocations(FVector Location)
+{
+	for (int i = 0; i < Selected.Num(); i++)
+	{
+		if (ABaseUnit* SelectedCharacter = Cast<ABaseUnit>(Selected[i]))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::SetMoveMarkerLocations %s"), *SelectedCharacter->GetFName().ToString());
+			SelectedCharacter->SetMoveMarkerLocation(Location);
+		}
+	}
+}
 void ARTSPlayerController::AddInputMapping(const UInputMappingContext* InputMapping, const int32 MappingPriority) const
 {
 

@@ -39,7 +39,8 @@ struct FCommandData
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	AActor* Target;
 
-
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	uint8 Commander;
 };
 /**
  * 

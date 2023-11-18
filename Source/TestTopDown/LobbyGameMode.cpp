@@ -10,7 +10,7 @@ void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 	Super::PostLogin(NewPlayer);
 	currentPlayerCount++;
 	UE_LOG(LogTemp, Warning, TEXT("ALobbyGameMode::PostLogin currentPlayerCount : %d"), currentPlayerCount);
-	if (currentPlayerCount >= 3)
+	if (currentPlayerCount >= 2)
 	{
 		GetWorldTimerManager().SetTimer(gameStartTimer,this,&ALobbyGameMode::StartGame,10);
 	}

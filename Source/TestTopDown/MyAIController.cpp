@@ -3,12 +3,12 @@
 
 #include "MyAIController.h"
 #include "BaseUnit.h"
-#include "NiagaraSystem.h"
-#include "NiagaraFunctionLibrary.h"
+
 #include "Navigation/PathFollowingComponent.h"
 
 AMyAIController::AMyAIController(const FObjectInitializer& ObjectInitializer)
 {
+    UE_LOG(LogTemp, Warning, TEXT("AMyAIController::AMyAIController"));
 }
 
 void AMyAIController::CommandMove(FCommandData CommandData)
@@ -16,8 +16,6 @@ void AMyAIController::CommandMove(FCommandData CommandData)
     CurrentCommandData = CommandData;
     LookAtLocation(CommandData.Location);
     auto result = MoveToLocation(CommandData.Location);
-
-    UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, FXCursor, CommandData.Location, FRotator::ZeroRotator, FVector(1.f, 1.f, 1.f), true, true, ENCPoolMethod::None, true);
 
     UE_LOG(LogTemp, Warning, TEXT("AMyAIController::CommandMove result %d"), result);
 }

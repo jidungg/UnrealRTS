@@ -21,8 +21,7 @@ public:
 
 	// Called every frame.
 	virtual void Tick(float DeltaSeconds) override;
-	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-
+	virtual void Destroyed() override;
 	/** Returns TopDownCameraComponent subobject **/
 	FORCEINLINE class UCameraComponent* GetTopDownCameraComponent() const { return TopDownCameraComponent; }
 	/** Returns CameraBoom subobject **/
@@ -52,7 +51,8 @@ public:
 
 	UFUNCTION()
 	void SetAIController(AMyAIController* NewAIController) { MyAIController = NewAIController; }
-
+	UFUNCTION()
+	void SetMoveMarkerLocation(const FVector Location);
 protected:
 
 	UFUNCTION()
@@ -66,6 +66,9 @@ protected:
 
 	UFUNCTION()
 	void DestinationReached(const FCommandData CommandData);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void RPC_OnDestinationReached(const FCommandData CommandData);
 
 	UFUNCTION()
 	void SetWalk() const;
@@ -83,8 +86,8 @@ protected:
 	bool IsOrientated() const;
 
 
-	UFUNCTION()
-	void SetMoveMarkerLocation(const FVector Location);
+
+protected:
 
 	UPROPERTY()
 	UCharacterMovementComponent* CharacterMoveComp;
