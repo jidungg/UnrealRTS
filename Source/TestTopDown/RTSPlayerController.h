@@ -40,7 +40,7 @@ protected:
 	void UpdatePlacement() const;
 
 	UFUNCTION()
-	bool ActorSelected(AActor* ActorToCheck) const;
+	bool IsActorSelected(AActor* ActorToCheck) const;
 	UFUNCTION(Server, Reliable)
 	void Server_Select(AActor* ActorToSelect);
 	UFUNCTION(Server, Reliable)
@@ -48,9 +48,19 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void Server_Deselect(AActor* ActorToDeselect);
 	UFUNCTION(Server, Reliable)
-	void Server_Deselect_Group(const TArray<AActor*>& ActorsToSelect);
+	void Server_Deselect_Group(const TArray<AActor*>& ActorsToDeSelect);
+
+
+	UFUNCTION()
+	void Local_Deselet_Group(const TArray<AActor*>& ActorsToDeselect);
+
+	UFUNCTION()
+	void ClearSelected();
 	UFUNCTION(Server, Reliable)
 	void Server_ClearSelected();
+	UFUNCTION()
+	void Local_DeSelectAll();
+
 	UFUNCTION(Server, Reliable)
 	void Server_Place(EUnitType unitType, FTransform spawnTransform);
 	UFUNCTION(Server, Reliable)

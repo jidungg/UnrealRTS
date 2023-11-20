@@ -49,6 +49,7 @@ void APlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 	UEnhancedInputComponent* Input = CastChecked<UEnhancedInputComponent>(PlayerInputComponent);
+
 	const ARTSPlayerController* PC = Cast<ARTSPlayerController>(GetController());
 
 	if (IsValid(Input) == false || IsValid(PC) == false)
@@ -69,7 +70,7 @@ void APlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 		EPlayerInputActions::BindInput_TriggerOnly(Input, PlayerActions->PlaceCancel, this, &APlayerPawn::PlaceCancel);
 
 		EPlayerInputActions::BindInput_Simple(Input, PlayerActions->Shift, this, &APlayerPawn::Shift, &APlayerPawn::Shift);
-		EPlayerInputActions::BindInput_TriggerOnly(Input, PlayerActions->ShiftSelect, this, &APlayerPawn::ShiftSelect);
+		EPlayerInputActions::BindInput_Simple(Input, PlayerActions->ShiftSelect, this, &APlayerPawn::ShiftSelect, &APlayerPawn::ShiftSelectEnd);
 		EPlayerInputActions::BindInput_Simple(Input, PlayerActions->ShiftCommand, this, &APlayerPawn::CommandStart, &APlayerPawn::ShiftCommand);
 
 		EPlayerInputActions::BindInput_Simple(Input, PlayerActions->Alt, this, &APlayerPawn::Alt, &APlayerPawn::Alt);
@@ -239,6 +240,41 @@ void APlayerPawn::Rotate(const FInputActionValue& Value)
 
 	}
 }
+void APlayerPawn::Zoom(const FInputActionValue& Value)
+{
+	if (ensure(Value.GetValueType() == EInputActionValueType::Axis1D))
+	{
+		TargetZoom = FMath::Clamp(TargetZoom + (Value.Get<float>() * ZoomSpeed), MinZoom, MaxZoom);
+	}
+}
+void APlayerPawn::TestPlacement(const FInputActionValue& Value)
+{
+	if (PlayerController == nullptr)
+		return;
+
+	PlayerController->SetPlacementPreview();
+}
+
+void APlayerPawn::Place(const FInputActionValue& Value)
+{
+	if (PlayerController == nullptr)
+		return;
+
+	if (PlayerController->IsPlacementModeEnabled())
+	{
+		PlayerController->Place();
+	}
+}
+void APlayerPawn::PlaceCancel(const FInputActionValue& Value)
+{
+	if (PlayerController == nullptr)
+		return;
+
+	if (PlayerController->IsPlacementModeEnabled())
+	{
+		PlayerController->PlaceCancel();
+	}
+}
 
 
 void APlayerPawn::Select(const FInputActionValue& Value)
@@ -311,41 +347,7 @@ AActor* APlayerPawn::GetSelectedObject()
 
 	return nullptr;
 }
-void APlayerPawn::Zoom(const FInputActionValue& Value)
-{
-	if (ensure(Value.GetValueType() == EInputActionValueType::Axis1D))
-	{
-		TargetZoom = FMath::Clamp(TargetZoom +( Value.Get<float>() * ZoomSpeed), MinZoom, MaxZoom);
-	}
-}
-void APlayerPawn::TestPlacement(const FInputActionValue& Value)
-{
-	if (PlayerController == nullptr)
-		return;
 
-	PlayerController->SetPlacementPreview();
-}
-
-void APlayerPawn::Place(const FInputActionValue & Value)
-{
-	if (PlayerController == nullptr)
-		return;
-
-	if (PlayerController->IsPlacementModeEnabled())
-	{
-		PlayerController->Place();
-	}
-}
-void APlayerPawn::PlaceCancel(const FInputActionValue& Value)
-{
-	if (PlayerController == nullptr)
-		return;
-
-	if (PlayerController->IsPlacementModeEnabled())
-	{
-		PlayerController->PlaceCancel();
-	}
-}
 
 void APlayerPawn::SelectDoubleTap(const FInputActionValue& Value)
 {
@@ -364,13 +366,7 @@ void APlayerPawn::SelectDoubleTap(const FInputActionValue& Value)
 	}
 }
 
-void APlayerPawn::Shift(const FInputActionValue& Value)
-{
-	if (PlayerController == nullptr)
-		return;
 
-	PlayerController->SetInputShift(Value.Get<bool>());
-}
 
 
 
@@ -409,25 +405,20 @@ FCommandData APlayerPawn::CreateCommandData(const ECommandType Type) const
 	return FCommandData(CommandLocation, CommandRotation, Type, dragAfterCommand);
 }
 
-void APlayerPawn::Alt(const FInputActionValue& Value)
+
+void APlayerPawn::Shift(const FInputActionValue& Value)
 {
 	if (PlayerController == nullptr)
 		return;
 
-	PlayerController->SetInputAlt(Value.Get<bool>());
-}
-void APlayerPawn::Ctrl(const FInputActionValue& Value)
-{
-	if (PlayerController == nullptr)
-		return;
-
-	PlayerController->SetInputCtrl(Value.Get<bool>());
+	PlayerController->SetInputShift(Value.Get<bool>());
 }
 void APlayerPawn::ShiftSelect(const FInputActionValue& Value)
 {
 	if (PlayerController == nullptr)
 		return;
-
+	LeftMouseHitLocation = PlayerController->GetMousePositionOnTerrain();
+	UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::ShiftSelect"));
 	if (AActor* Selection = GetSelectedObject())
 	{
 		const TSubclassOf<AActor> SelectionClass = Selection->GetClass();
@@ -439,8 +430,10 @@ void APlayerPawn::ShiftSelect(const FInputActionValue& Value)
 		{
 			AActor* Actor = *ActorItr;
 			const float DistanceSquared = FVector::DistSquared(Actor->GetActorLocation(), LeftMouseHitLocation);
+			UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::ShiftSelect name: %s \n mouse : %s , ActorLocation: %s, Dist: %f"),*Actor->GetFName().ToString(), *LeftMouseHitLocation.ToString(), *Actor->GetActorLocation().ToString(), DistanceSquared);
 			if (DistanceSquared <= FMath::Square(1000.f))
 			{
+				UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::ShiftSelect ActorDist Confirmed"));
 				Actors.AddUnique(Actor);
 			}
 		}
@@ -449,8 +442,12 @@ void APlayerPawn::ShiftSelect(const FInputActionValue& Value)
 	}
 	else
 	{
+		UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::ShiftSelect Nothing"));
 		PlayerController->Handle_Selection(nullptr);
 	}
+}
+void APlayerPawn::ShiftSelectEnd(const FInputActionValue& Value)
+{
 }
 void APlayerPawn::ShiftCommand(const FInputActionValue& Value)
 {
@@ -460,15 +457,41 @@ void APlayerPawn::ShiftCommand(const FInputActionValue& Value)
 	PlayerController->CommandSelected(CreateCommandData(ECommandType::CommandMoveFast));
 }
 
-void APlayerPawn::AltSelect(const FInputActionValue& Value)
+
+void APlayerPawn::Alt(const FInputActionValue& Value)
 {
 	if (PlayerController == nullptr)
 		return;
 
+	PlayerController->SetInputAlt(Value.Get<bool>());
+}
+void APlayerPawn::AltSelect(const FInputActionValue& Value)
+{
+	if (PlayerController == nullptr)
+		return;
+	UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::AltSelect"));
 	BoxSelect = false;
 
 	LeftMouseHitLocation = PlayerController->GetMousePositionOnTerrain();
 
+}
+void APlayerPawn::AltSelectEnd(const FInputActionValue& Value)
+{
+	if (PlayerController == nullptr)
+		return;
+	UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::AltSelectEnd"));
+	if (BoxSelect && SelectionBox)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::AltSelectEnd BoxSelect"));
+		SelectionBox->EndBoxSelection(false);
+
+		BoxSelect = false;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::AltSelectEnd SingleSelect"));
+		PlayerController->Handle_Deselection(GetSelectedObject());
+	}
 }
 void APlayerPawn::AltCommand(const FInputActionValue& Value)
 {
@@ -477,28 +500,20 @@ void APlayerPawn::AltCommand(const FInputActionValue& Value)
 	UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::AltCommand"));
 	PlayerController->CommandSelected(CreateCommandData(ECommandType::CommandMoveSlow));
 }
-void APlayerPawn::AltSelectEnd(const FInputActionValue& Value)
+
+
+void APlayerPawn::Ctrl(const FInputActionValue& Value)
 {
 	if (PlayerController == nullptr)
 		return;
 
-	if (BoxSelect && SelectionBox)
-	{
-		SelectionBox->EndBoxSelection(false);
-
-		BoxSelect = false;
-	}
-	else
-	{
-
-		PlayerController->Handle_Deselection(GetSelectedObject());
-	}
+	PlayerController->SetInputCtrl(Value.Get<bool>());
 }
 void APlayerPawn::CtrlSelect(const FInputActionValue& Value)
 {
 	if (PlayerController == nullptr)
 		return;
-
+	UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::CtrlSelect"));
 	BoxSelect = false;
 
 	LeftMouseHitLocation = PlayerController->GetMousePositionOnTerrain();
@@ -507,9 +522,10 @@ void APlayerPawn::CtrlSelectEnd(const FInputActionValue& Value)
 {
 	if (PlayerController == nullptr)
 		return;
-
+	UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::CtrlSelectEnd"));
 	if (BoxSelect && SelectionBox)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::CtrlSelectEnd BoxSelect"));
 		SelectionBox->EndBoxSelection(true, true);
 		BoxSelect = false;
 	}
@@ -517,6 +533,7 @@ void APlayerPawn::CtrlSelectEnd(const FInputActionValue& Value)
 	{
 		if (AActor* Selection = GetSelectedObject())
 		{
+			UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::CtrlSelectEnd SingleSelect"));
 			PlayerController->Handle_Selection(Selection);
 		}
 	}

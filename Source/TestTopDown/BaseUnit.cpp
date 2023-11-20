@@ -137,12 +137,14 @@ void ABaseUnit::SetMoveMarkerLocation(const FVector Location)
 }
 void ABaseUnit::Select()
 {
+	UE_LOG(LogTemp, Warning, TEXT(" ABaseUnit::Select"));
 	Selected = true;
 	Highlight(Selected);
 }
 
 void ABaseUnit::Deselect()
 {
+	UE_LOG(LogTemp, Warning, TEXT(" ABaseUnit::Deselect"));
 	Selected = false;
 	Highlight(Selected);
 }

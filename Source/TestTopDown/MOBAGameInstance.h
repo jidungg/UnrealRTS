@@ -65,6 +65,8 @@ private://Online Subsystem Session interface functions
 
 public:
 	UFUNCTION(Exec)
+	void DrawLogLine();
+	UFUNCTION(Exec)
 	void CheckStat();
 	UFUNCTION(Exec)
 	void CheckDefaultSearchOptions();
@@ -72,6 +74,7 @@ public:
 	void CheckSearchOptions();
 	UFUNCTION(Exec)
 	void CheckRace();
+
 	TEnumAsByte<ERaceType> Race;
 private:
 	TSubclassOf<class UUserWidget> mainMenuClass;
