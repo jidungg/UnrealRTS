@@ -274,6 +274,11 @@ void UMOBAGameInstance::GoToMainMenuLevel()
 	playerController->ClientTravel("/Game/MenuSystem/MainMenu", ETravelType::TRAVEL_Absolute);
 }
 
+void UMOBAGameInstance::DrawLogLine()
+{
+	UE_LOG(LogTemp, Warning, TEXT("========================================================="));
+}
+
 void UMOBAGameInstance::CheckStat()
 {
 	int ttd = 10;

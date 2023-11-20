@@ -148,36 +148,36 @@ protected://Mouse input
 	UFUNCTION()
 	void Command(const FInputActionValue& Value);
 
+
+	
+	
+	
+
 	UFUNCTION()
 	void Shift(const FInputActionValue& Value);
-
-	UFUNCTION()
-	void Alt(const FInputActionValue& Value);
-	
-	UFUNCTION()
-	void Ctrl(const FInputActionValue& Value);
-
 	UFUNCTION()
 	void ShiftSelect(const FInputActionValue& Value);
-
+	UFUNCTION()
+	void ShiftSelectEnd(const FInputActionValue& Value);
 	UFUNCTION()
 	void ShiftCommand(const FInputActionValue& Value);
 
 	UFUNCTION()
+	void Alt(const FInputActionValue& Value);
+	UFUNCTION()
 	void AltSelect(const FInputActionValue& Value);
-
+	UFUNCTION()
+	void AltSelectEnd(const FInputActionValue& Value);
 	UFUNCTION()
 	void AltCommand(const FInputActionValue& Value);
 
-	UFUNCTION()
-	void AltSelectEnd(const FInputActionValue& Value);
 
+	UFUNCTION()
+	void Ctrl(const FInputActionValue& Value);
 	UFUNCTION()
 	void CtrlSelect(const FInputActionValue& Value);
-
 	UFUNCTION()
 	void CtrlSelectEnd(const FInputActionValue& Value);
-
 	UFUNCTION()
 	void CtrlCommand(const FInputActionValue& Value);
 

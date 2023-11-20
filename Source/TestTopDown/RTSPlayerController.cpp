@@ -299,60 +299,61 @@ void ARTSPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&
 	DOREPLIFETIME_CONDITION(ARTSPlayerController, Selected, COND_OwnerOnly);
 }
 
-void ARTSPlayerController::Handle_Selection(AActor* ActorTOSelect)
+void ARTSPlayerController::Handle_Selection(AActor* ActorToSelect)
 {
-	if (ISelectable* Selectable = Cast<ISelectable>(ActorTOSelect))
+	UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::Handle_Selection"));
+	if (ISelectable* Selectable = Cast<ISelectable>(ActorToSelect))
 	{
-		if (ActorTOSelect && ActorSelected(ActorTOSelect))
+		if (ActorToSelect && IsActorSelected(ActorToSelect))
 		{
-			Server_Deselect(ActorTOSelect);
+			UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::Handle_Selection Deselect"));
+			Selectable->Deselect();
+			Server_Deselect(ActorToSelect);
 		}
 		else
 		{
-			Server_Select(ActorTOSelect);
+			UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::Handle_Selection Select"));
+			Selectable->Select();
+			Server_Select(ActorToSelect);
 		}
 	}
 	else
 	{
-		Server_ClearSelected();
+		UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::Handle_Selection ClearSelect"));
+		ClearSelected();
 	}
 }
 void ARTSPlayerController::Server_Select_Implementation(AActor* ActorToSelect)
 {
-
+	UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::Server_Select_Implementation"));
 	if (ActorToSelect == nullptr) return;
 
 	if (ISelectable* Selectable = Cast<ISelectable>(ActorToSelect))
 	{
-		Selectable->Select();
 		Selected.Add(ActorToSelect);
 		OnRep_Selected();
 	}
 }
 
-void ARTSPlayerController::Server_ClearSelected_Implementation()
+
+
+void ARTSPlayerController::Handle_Selection(TArray<AActor*> ActorsToSelect)
 {
-	for (int i = 0; i < Selected.Num(); i++)
+	UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::Handle_Selection"));
+	ClearSelected();
+	Server_Select_Group(ActorsToSelect);
+	for (int i = 0; i < ActorsToSelect.Num(); i++)
 	{
-		if (Selected[i])
+		if (ISelectable* Selectable = Cast<ISelectable>(ActorsToSelect[i]))
 		{
-			if (ISelectable* Selectable = Cast<ISelectable>(Selected[i]))
-			{
-				Selectable->Deselect();
-			}
+			Selectable->Select();
 		}
 	}
-	Selected.Empty();
-	OnRep_Selected();
-}
-
-void ARTSPlayerController::Handle_Selection(TArray<AActor*> ActorsTOSelect)
-{
-	Server_Select_Group(ActorsTOSelect);
 }
 void ARTSPlayerController::Server_Select_Group_Implementation(const TArray<AActor*>& ActorsToSelect)
 {
-	Server_ClearSelected();
+	UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::Server_Select_Group_Implementation"));
+
 
 	TArray<AActor*> ValidActors;
 	for (int i = 0; i < ActorsToSelect.Num(); i++)
@@ -362,7 +363,6 @@ void ARTSPlayerController::Server_Select_Group_Implementation(const TArray<AActo
 			if (ISelectable* Selectable = Cast<ISelectable>(ActorsToSelect[i]))
 			{
 				ValidActors.Add(ActorsToSelect[i]);
-				Selectable->Select();
 			}
 		}
 	}
@@ -375,28 +375,36 @@ void ARTSPlayerController::Server_Select_Group_Implementation(const TArray<AActo
 }
 void ARTSPlayerController::Handle_Deselection(AActor* ActorToDeselect)
 {
-	if (ActorToDeselect && ActorSelected(ActorToDeselect))
+	UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::Handle_Deselection"));
+	if (ActorToDeselect && IsActorSelected(ActorToDeselect))
 	{
 		Server_Deselect(ActorToDeselect);
+		if (ISelectable* Selectable = Cast<ISelectable>(ActorToDeselect))
+		{
+			Selectable->Deselect();
+		}
 	}
 }
+
 void ARTSPlayerController::Server_Deselect_Implementation(AActor* ActorToDeselect)
 {
 	if (ActorToDeselect == nullptr) return;
-
+	UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::Server_Deselect_Implementation"));
 	if (ISelectable* Selectable = Cast<ISelectable>(ActorToDeselect))
 	{
-		Selectable->Deselect();
 		Selected.Remove(ActorToDeselect);
 		OnRep_Selected();
 	}
 }
 void ARTSPlayerController::Handle_Deselection(TArray<AActor*> ActorsToDeselect)
 {
+	UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::Handle_Deselection Array"));
+	Local_Deselet_Group(ActorsToDeselect);
 	Server_Deselect_Group(ActorsToDeselect);
 }
 void ARTSPlayerController::Server_Deselect_Group_Implementation(const TArray<AActor*>& ActorsToDeselect)
 {
+	UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::Server_Deselect_Group_Implementation"));
 	for (int i = 0; i < ActorsToDeselect.Num(); i++)
 	{
 		if (ActorsToDeselect[i])
@@ -407,7 +415,6 @@ void ARTSPlayerController::Server_Deselect_Group_Implementation(const TArray<AAc
 				{
 					if (ISelectable* Selectable = Cast<ISelectable>(ActorsToDeselect[i]))
 					{
-						Selectable->Deselect();
 						Selected.RemoveAt(j);
 						break;
 					}
@@ -417,6 +424,53 @@ void ARTSPlayerController::Server_Deselect_Group_Implementation(const TArray<AAc
 	}
 	OnRep_Selected();
 }
+void ARTSPlayerController::Local_Deselet_Group(const TArray<AActor*>& ActorsToDeselect)
+{
+	UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::Local_Deselet_Group"));
+	int ActorsCount = ActorsToDeselect.Num();
+	for (int i = 0; i < ActorsCount; i++)
+	{
+		if (ActorsToDeselect[i])
+		{
+			for (int j = Selected.Num() - 1; j >= 0; j--)
+			{
+				if (ActorsToDeselect[i] == Selected[j])
+				{
+					if (ISelectable* Selectable = Cast<ISelectable>(ActorsToDeselect[i]))
+					{
+						Selectable->Deselect();
+						break;
+					}
+				}
+			}
+		}
+	}
+}
+
+void ARTSPlayerController::ClearSelected()
+{
+	Local_DeSelectAll();
+	Server_ClearSelected();
+}
+void ARTSPlayerController::Local_DeSelectAll()
+{
+	int SelectedArrrayCount = Selected.Num();
+	for (int i = 0; i < SelectedArrrayCount; i++)
+	{
+		if (ISelectable* selectable = Cast<ISelectable>(Selected[i]))
+		{
+			selectable->Deselect();
+		}
+	}
+}
+void ARTSPlayerController::Server_ClearSelected_Implementation()
+{
+	UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::Server_ClearSelected_Implementation"));
+	Selected.Empty();
+	OnRep_Selected();
+}
+
+
 FVector ARTSPlayerController::GetMousePositionOnTerrain() const
 {
 	FVector WorldLocation, WorldDirection;
@@ -457,7 +511,7 @@ FVector ARTSPlayerController::GetMousePositionOnSurface() const
 }
 
 
-bool ARTSPlayerController::ActorSelected(AActor* ActorToCheck) const
+bool ARTSPlayerController::IsActorSelected(AActor* ActorToCheck) const
 {
 	if (ActorToCheck && Selected.Contains(ActorToCheck))
 	{
@@ -470,10 +524,4 @@ void ARTSPlayerController::OnRep_Selected()
 {
 	OnSelectedUpdated.Broadcast();
 }
-
-
-
-
-
-
 
