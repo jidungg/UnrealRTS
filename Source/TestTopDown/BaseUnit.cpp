@@ -55,7 +55,7 @@ ABaseUnit::ABaseUnit()
 
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 
-
+	UE_LOG(LogTemp, Warning, TEXT("ABaseUnit::ABaseUnit"));
 }
 
 void ABaseUnit::BeginPlay()

@@ -37,11 +37,10 @@ APlayerPawn::APlayerPawn()
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
 	CameraComponent->SetupAttachment(SpringArmComponent);
 
+	UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::APlayerPawn"));
 	//ConstructorHelpers::FObjectFinder<UDataAsset> RaceDataObj(TEXT("/Game/TopDown/Data/DA_RaceData.DA_RaceData"));
 	//RaceDataAsset = RaceDataObj.Object;
 }
-
-
 
 // Called to bind functionality to input
 void APlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -82,24 +81,27 @@ void APlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 		EPlayerInputActions::BindInput_Simple(Input, PlayerActions->CtrlCommand, this, &APlayerPawn::CommandStart, &APlayerPawn::CtrlCommand);
 	}
 }
-
-
 // Called when the game starts or when spawned
 void APlayerPawn::BeginPlay()
 {
 	Super::BeginPlay();
-	UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::BeginPlay"));
+
 	TargetLocation = GetActorLocation();
 	TargetZoom = 3000.f;
 
 	const FRotator Rotation = SpringArmComponent->GetRelativeRotation();
 	TargetRotation = FRotator(Rotation.Pitch - 50, Rotation.Yaw, 0.0f);
-
-	PlayerController = Cast<ARTSPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
-
+	RTSPlayerController = Cast<ARTSPlayerController>(Controller);
 	CreateSelectionBox();
+
+	UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::BeginPlay Loca: %s"),*GetActorLocation().ToString());
 }
 
+void APlayerPawn::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+}
 void APlayerPawn::CreateSelectionBox()
 {
 	UE_LOG(LogTemp, Warning, TEXT("ATestTopDownGameMode::CreateSelectionBox"));
@@ -126,7 +128,7 @@ void APlayerPawn::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	//UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::Tick location: %s , rotation: %s"), *TargetLocation.ToString(), *TargetRotation.ToString());
 	CameraBounds();
-	EdgeScroll();
+	//EdgeScroll();
 
 	const FVector InterpolatedLocation = UKismetMathLibrary::VInterpTo(GetActorLocation(), TargetLocation, DeltaTime, Smoothing);
 	SetActorLocation(InterpolatedLocation);
@@ -136,6 +138,7 @@ void APlayerPawn::Tick(float DeltaTime)
 
 	const FRotator InterpolatedRotation = UKismetMathLibrary::RInterpTo(SpringArmComponent->GetRelativeRotation(), TargetRotation, DeltaTime, RotateSpeed);
 	SpringArmComponent->SetRelativeRotation(InterpolatedRotation);
+
 	//UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::Rotate Value: %s "), *InterpolatedRotation.ToString());
 }
 
@@ -249,51 +252,51 @@ void APlayerPawn::Zoom(const FInputActionValue& Value)
 }
 void APlayerPawn::TestPlacement(const FInputActionValue& Value)
 {
-	if (PlayerController == nullptr)
+	if (RTSPlayerController == nullptr)
 		return;
 
-	PlayerController->SetPlacementPreview();
+	RTSPlayerController->SetPlacementPreview();
 }
 
 void APlayerPawn::Place(const FInputActionValue& Value)
 {
-	if (PlayerController == nullptr)
+	if (RTSPlayerController == nullptr)
 		return;
 
-	if (PlayerController->IsPlacementModeEnabled())
+	if (RTSPlayerController->IsPlacementModeEnabled())
 	{
-		PlayerController->Place();
+		RTSPlayerController->Place();
 	}
 }
 void APlayerPawn::PlaceCancel(const FInputActionValue& Value)
 {
-	if (PlayerController == nullptr)
+	if (RTSPlayerController == nullptr)
 		return;
 
-	if (PlayerController->IsPlacementModeEnabled())
+	if (RTSPlayerController->IsPlacementModeEnabled())
 	{
-		PlayerController->PlaceCancel();
+		RTSPlayerController->PlaceCancel();
 	}
 }
 
 
 void APlayerPawn::Select(const FInputActionValue& Value)
 {
-	if (PlayerController == nullptr) return;
+	if (RTSPlayerController == nullptr) return;
 
-	PlayerController->Handle_Selection(nullptr);
+	RTSPlayerController->Handle_Selection(nullptr);
 	BoxSelect = false;
-	LeftMouseHitLocation = PlayerController->GetMousePositionOnTerrain();
+	LeftMouseHitLocation = RTSPlayerController->GetMousePositionOnTerrain();
 	UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::Select %s"), *LeftMouseHitLocation.ToString());
 }
 
 void APlayerPawn::SelectHold(const FInputActionValue& Value)
 {
 	
-	if (PlayerController == nullptr) 
+	if (RTSPlayerController == nullptr)
 		return;
 
-	if ((LeftMouseHitLocation - PlayerController->GetMousePositionOnTerrain()).Length() <= 100.f)
+	if ((LeftMouseHitLocation - RTSPlayerController->GetMousePositionOnTerrain()).Length() <= 100.f)
 		return;
 
 
@@ -306,7 +309,7 @@ void APlayerPawn::SelectHold(const FInputActionValue& Value)
 }
 void APlayerPawn::SelectEnd(const FInputActionValue& Value)
 {
-	if (PlayerController == nullptr)
+	if (RTSPlayerController == nullptr)
 		return;
 
 
@@ -319,7 +322,7 @@ void APlayerPawn::SelectEnd(const FInputActionValue& Value)
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::SelectEnd normal"));
-		PlayerController->Handle_Selection(GetSelectedObject());
+		RTSPlayerController->Handle_Selection(GetSelectedObject());
 	}
 }
 AActor* APlayerPawn::GetSelectedObject()
@@ -328,7 +331,7 @@ AActor* APlayerPawn::GetSelectedObject()
 	if (World == nullptr) return nullptr;
 
 	FVector WorldLoacation, WorldDirection;
-	PlayerController->DeprojectMousePositionToWorld(WorldLoacation, WorldDirection);
+	RTSPlayerController->DeprojectMousePositionToWorld(WorldLoacation, WorldDirection);
 	FVector End = WorldDirection * 10000000.0f + WorldLoacation;
 	UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::GetSelectedObject WorldLoacation: %s, WorldDirection : %s, End : %s"), *WorldLoacation.ToString(), *WorldDirection.ToString(), *End.ToString());
 	FCollisionQueryParams Params;
@@ -351,7 +354,7 @@ AActor* APlayerPawn::GetSelectedObject()
 
 void APlayerPawn::SelectDoubleTap(const FInputActionValue& Value)
 {
-	if (PlayerController == nullptr)
+	if (RTSPlayerController == nullptr)
 		return;
 	UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::SelectDoubleTap"));
 	if (AActor* Selection = GetSelectedObject())
@@ -360,38 +363,34 @@ void APlayerPawn::SelectDoubleTap(const FInputActionValue& Value)
 		if (ABaseUnit* SelectedCharacter = Cast< ABaseUnit>(Selection))
 		{
 	
-			PlayerController->Handle_Deselection(SelectedCharacter);
+			RTSPlayerController->Handle_Deselection(SelectedCharacter);
 			SelectedCharacter->Destroy();
 		}
 	}
 }
 
-
-
-
-
 void APlayerPawn::CommandStart(const FInputActionValue& Value)
 {
-	if (PlayerController == nullptr)
+	if (RTSPlayerController == nullptr)
 		return;
 	UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::CommandStart"));
-	CommandLocation = PlayerController->GetMousePositionOnTerrain();
+	CommandLocation = RTSPlayerController->GetMousePositionOnTerrain();
 }
 
 void APlayerPawn::Command(const FInputActionValue& Value)
 {
-	if (PlayerController == nullptr)
+	if (RTSPlayerController == nullptr)
 		return;
 	UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::Command"));
-	PlayerController->CommandSelected(CreateCommandData(ECommandType::CommandMove));
+	RTSPlayerController->CommandSelected(CreateCommandData(ECommandType::CommandMove));
 }
 FCommandData APlayerPawn::CreateCommandData(const ECommandType Type) const
 {
-	if (PlayerController == nullptr)
+	if (RTSPlayerController == nullptr)
 		return FCommandData();
 
 	FRotator CommandRotation = FRotator::ZeroRotator;
-	const FVector CommandEndLocation = PlayerController->GetMousePositionOnTerrain();
+	const FVector CommandEndLocation = RTSPlayerController->GetMousePositionOnTerrain();
 	bool dragAfterCommand = 0;
 
 	if ((CommandEndLocation - CommandLocation).Length() > 100.f)
@@ -408,16 +407,16 @@ FCommandData APlayerPawn::CreateCommandData(const ECommandType Type) const
 
 void APlayerPawn::Shift(const FInputActionValue& Value)
 {
-	if (PlayerController == nullptr)
+	if (RTSPlayerController == nullptr)
 		return;
 
-	PlayerController->SetInputShift(Value.Get<bool>());
+	RTSPlayerController->SetInputShift(Value.Get<bool>());
 }
 void APlayerPawn::ShiftSelect(const FInputActionValue& Value)
 {
-	if (PlayerController == nullptr)
+	if (RTSPlayerController == nullptr)
 		return;
-	LeftMouseHitLocation = PlayerController->GetMousePositionOnTerrain();
+	LeftMouseHitLocation = RTSPlayerController->GetMousePositionOnTerrain();
 	UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::ShiftSelect"));
 	if (AActor* Selection = GetSelectedObject())
 	{
@@ -437,13 +436,13 @@ void APlayerPawn::ShiftSelect(const FInputActionValue& Value)
 				Actors.AddUnique(Actor);
 			}
 		}
-		PlayerController->Handle_Selection(Actors);
+		RTSPlayerController->Handle_Selection(Actors);
 
 	}
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::ShiftSelect Nothing"));
-		PlayerController->Handle_Selection(nullptr);
+		RTSPlayerController->Handle_Selection(nullptr);
 	}
 }
 void APlayerPawn::ShiftSelectEnd(const FInputActionValue& Value)
@@ -451,33 +450,33 @@ void APlayerPawn::ShiftSelectEnd(const FInputActionValue& Value)
 }
 void APlayerPawn::ShiftCommand(const FInputActionValue& Value)
 {
-	if (PlayerController == nullptr)
+	if (RTSPlayerController == nullptr)
 		return;
 	UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::ShiftCommand"));
-	PlayerController->CommandSelected(CreateCommandData(ECommandType::CommandMoveFast));
+	RTSPlayerController->CommandSelected(CreateCommandData(ECommandType::CommandMoveFast));
 }
 
 
 void APlayerPawn::Alt(const FInputActionValue& Value)
 {
-	if (PlayerController == nullptr)
+	if (RTSPlayerController == nullptr)
 		return;
 
-	PlayerController->SetInputAlt(Value.Get<bool>());
+	RTSPlayerController->SetInputAlt(Value.Get<bool>());
 }
 void APlayerPawn::AltSelect(const FInputActionValue& Value)
 {
-	if (PlayerController == nullptr)
+	if (RTSPlayerController == nullptr)
 		return;
 	UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::AltSelect"));
 	BoxSelect = false;
 
-	LeftMouseHitLocation = PlayerController->GetMousePositionOnTerrain();
+	LeftMouseHitLocation = RTSPlayerController->GetMousePositionOnTerrain();
 
 }
 void APlayerPawn::AltSelectEnd(const FInputActionValue& Value)
 {
-	if (PlayerController == nullptr)
+	if (RTSPlayerController == nullptr)
 		return;
 	UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::AltSelectEnd"));
 	if (BoxSelect && SelectionBox)
@@ -490,37 +489,37 @@ void APlayerPawn::AltSelectEnd(const FInputActionValue& Value)
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::AltSelectEnd SingleSelect"));
-		PlayerController->Handle_Deselection(GetSelectedObject());
+		RTSPlayerController->Handle_Deselection(GetSelectedObject());
 	}
 }
 void APlayerPawn::AltCommand(const FInputActionValue& Value)
 {
-	if (PlayerController == nullptr)
+	if (RTSPlayerController == nullptr)
 		return;
 	UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::AltCommand"));
-	PlayerController->CommandSelected(CreateCommandData(ECommandType::CommandMoveSlow));
+	RTSPlayerController->CommandSelected(CreateCommandData(ECommandType::CommandMoveSlow));
 }
 
 
 void APlayerPawn::Ctrl(const FInputActionValue& Value)
 {
-	if (PlayerController == nullptr)
+	if (RTSPlayerController == nullptr)
 		return;
 
-	PlayerController->SetInputCtrl(Value.Get<bool>());
+	RTSPlayerController->SetInputCtrl(Value.Get<bool>());
 }
 void APlayerPawn::CtrlSelect(const FInputActionValue& Value)
 {
-	if (PlayerController == nullptr)
+	if (RTSPlayerController == nullptr)
 		return;
 	UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::CtrlSelect"));
 	BoxSelect = false;
 
-	LeftMouseHitLocation = PlayerController->GetMousePositionOnTerrain();
+	LeftMouseHitLocation = RTSPlayerController->GetMousePositionOnTerrain();
 }
 void APlayerPawn::CtrlSelectEnd(const FInputActionValue& Value)
 {
-	if (PlayerController == nullptr)
+	if (RTSPlayerController == nullptr)
 		return;
 	UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::CtrlSelectEnd"));
 	if (BoxSelect && SelectionBox)
@@ -534,17 +533,17 @@ void APlayerPawn::CtrlSelectEnd(const FInputActionValue& Value)
 		if (AActor* Selection = GetSelectedObject())
 		{
 			UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::CtrlSelectEnd SingleSelect"));
-			PlayerController->Handle_Selection(Selection);
+			RTSPlayerController->Handle_Selection(Selection);
 		}
 	}
 }
 
 void APlayerPawn::CtrlCommand(const FInputActionValue& Value)
 {
-	if (PlayerController == nullptr)
+	if (RTSPlayerController == nullptr)
 		return;
 	UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::CtrlCommand"));
-	PlayerController->CommandSelected(CreateCommandData(ECommandType::CommandMoveAttack));
+	RTSPlayerController->CommandSelected(CreateCommandData(ECommandType::CommandMoveAttack));
 }
 
 

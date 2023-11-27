@@ -10,7 +10,10 @@
 #include "NiagaraSystem.h"
 #include "NiagaraFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"
+#include "ABPlayerState.h"
+#include "TestTopDownGameMode.h"
 #include "BaseUnit.h"
+
 
 ARTSPlayerController::ARTSPlayerController(const FObjectInitializer& ObjectInitializer)
 {
@@ -19,7 +22,7 @@ ARTSPlayerController::ARTSPlayerController(const FObjectInitializer& ObjectIniti
 void ARTSPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-	UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::BeginPlay"));
+	UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::BeginPlay "));
 	FInputModeGameAndUI InputMode;
 	InputMode.SetHideCursorDuringCapture(false);
 	SetInputMode(InputMode);
@@ -29,22 +32,29 @@ void ARTSPlayerController::BeginPlay()
 
 	GameInstance = Cast<UMOBAGameInstance>(GetGameInstance());
 	if (GameInstance == nullptr) return;
-
+	
 	if (IsLocalPlayerController())
 	{
-		Server_SpawnBasicWorker(GameInstance->Race);
+		Server_SpawnBasicWorker();
 	}
 }
-void ARTSPlayerController::Server_SpawnBasicWorker_Implementation(ERaceType RaceType)
+void ARTSPlayerController::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	
+}
+void ARTSPlayerController::Server_SpawnBasicWorker_Implementation()
 {
 	auto RaceData = Cast<URaceData>(RaceDataAsset);
 	if (RaceData == nullptr) return;
-	auto GameMode = UGameplayStatics::GetGameMode(GetWorld());
+
+	auto GameMode = Cast<ATestTopDownGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
 	if (GameMode == nullptr) return;
-	auto PlayerStart = GameMode->FindPlayerStart(this);
+
+	auto PlayerStart = GameMode->ChoosePlayerStart(this);
 	if (PlayerStart == nullptr) return;
-	UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::SpawnBasicWorker %d, %d"), RaceType, RaceData->GetBasicWorker(RaceType));
-	SpawnUnit(RaceData->GetBasicWorker(RaceType), PlayerStart->GetActorTransform());
+	
+	SpawnUnit(RaceData->GetBasicWorker(GameInstance->Race), PlayerStart->GetActorTransform());
 }
 void ARTSPlayerController::Tick(float DeltaTime)
 {
@@ -119,6 +129,8 @@ void ARTSPlayerController::Place()
 	SetInputPlacement(false);
 	Server_Place(EUnitType::Fox, PlacementPreviewActor->GetActorTransform());
 	EndPlacement();
+	auto DefaultPawn = GetPawn();
+	UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::Place DefaultPawn: %s, Loc : %s"), *DefaultPawn->GetName(), *DefaultPawn->GetActorLocation().ToString());
 }
 void ARTSPlayerController::Server_Place_Implementation(EUnitType unitType, FTransform spawnTransform)
 {

@@ -3,11 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Containers/Array.h"
 #include "GameFramework/GameModeBase.h"
-
 //#include "Steam/steam_api.h"
 
 #include "TestTopDownGameMode.generated.h"
+
 
 //#define RAW_APP_ID "480"
 
@@ -18,13 +19,17 @@ class ATestTopDownGameMode : public AGameModeBase
 
 public:
 	ATestTopDownGameMode();
-
+	virtual void PostLogin(APlayerController* NewPlayer) override;
+	virtual void Logout(AController* Exiting) override;
 
 protected:
 	virtual void BeginPlay() override;
-
+	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
 public:
-
+	
+protected:
+	uint32 MaxPlayerCount = 2;
+	uint32 currentPlayerCount = 0;
 	//static constexpr char* APP_ID = RAW_APP_ID;
 	//CSteamID myId;
 };
