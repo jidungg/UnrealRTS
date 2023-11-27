@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerState.h"
+#include "Data/RaceData.h"
 #include "ABPlayerState.generated.h"
 
 /**
@@ -16,9 +17,14 @@ class TESTTOPDOWN_API AABPlayerState : public APlayerState
 	
 public:
 	AABPlayerState();
-	void InitPlayerData();
+	virtual void BeginPlay() override;
 
+	UFUNCTION(Server, Reliable)
+	void Server_InitPlayerData();
 
+	uint32 GetPlayerNumber() { return PlayerNumber; }
+	void SetPlayerNumber(uint32 Number) { PlayerNumber = Number; }
 protected:
-
+	uint32 PlayerNumber=0;
+	TEnumAsByte<ERaceType> Race;
 };

@@ -33,7 +33,7 @@ public:
 	FVector GetMousePositionOnSurface() const;
 protected:
 	virtual void BeginPlay() override;
-
+	virtual void PostInitializeComponents() override;
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION()
@@ -64,7 +64,7 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void Server_Place(EUnitType unitType, FTransform spawnTransform);
 	UFUNCTION(Server, Reliable)
-	void Server_SpawnBasicWorker(ERaceType RaceType);
+	void Server_SpawnBasicWorker();
 
 	UFUNCTION(Client, Reliable)
 	void EndPlacement();

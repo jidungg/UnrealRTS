@@ -120,7 +120,6 @@ void UMOBAGameInstance::OnCreateSessionComplete(FName sessionName, bool isSuccee
 	if (engine == nullptr) return;
 	engine->AddOnScreenDebugMessage(1, 5, FColor::Green, FString::Printf(TEXT("OnCreateSessionComplete ID: %s"), *(sessionInterface->GetNamedSession(sessionName)->GetSessionIdStr())));
 
-
 	Host();
 }
 void UMOBAGameInstance::Host()
@@ -294,6 +293,7 @@ void UMOBAGameInstance::CheckStat()
 	engine->AddOnScreenDebugMessage(-1, ttd, FColor::Green,
 		FString::Printf(TEXT("Num of Sessions: %d"), numSessions));
 	auto namedOnlineSession = sessionInterface->GetNamedSession(SESSION_NAME);
+
 	if (namedOnlineSession == nullptr)
 	{
 		engine->AddOnScreenDebugMessage(-1, ttd, FColor::Green,

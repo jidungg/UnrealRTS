@@ -15,9 +15,10 @@ class TESTTOPDOWN_API APlayerPawn : public APawn
 public:
 	// Sets default values for this pawn's properties
 	APlayerPawn();
-
+	virtual void BeginPlay() override;
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual void PostInitializeComponents() override;
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 private:
@@ -25,7 +26,7 @@ private:
 	void CameraBounds();
 protected:
 	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+
 	UFUNCTION()
 	void EdgeScroll();
 
@@ -87,7 +88,7 @@ protected://Mouse input
 	void CreateSelectionBox();
 
 	UPROPERTY()
-	class ARTSPlayerController* PlayerController;
+	class ARTSPlayerController* RTSPlayerController;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Settings|Mouse")
 	TSubclassOf<class ASelectionBox> SelectionBoxClass;
@@ -148,10 +149,6 @@ protected://Mouse input
 	UFUNCTION()
 	void Command(const FInputActionValue& Value);
 
-
-	
-	
-	
 
 	UFUNCTION()
 	void Shift(const FInputActionValue& Value);
