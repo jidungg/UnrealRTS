@@ -9,6 +9,7 @@
 #include "EngineUtils.h"
 #include "GameFramework/PlayerStart.h"
 #include "MyPlayerStart.h"
+#include "GridActor.h"
 #include "UObject/ConstructorHelpers.h"
 
 
@@ -42,9 +43,11 @@ void ATestTopDownGameMode::Logout(AController* Exiting)
 
 void ATestTopDownGameMode::BeginPlay()
 {
-
 	Super::BeginPlay();
-
+	for (TActorIterator<AGridActor> It(GetWorld()); It; ++It)
+	{
+		Grid.Add(*It);
+	}
 	UE_LOG(LogTemp, Warning, TEXT("ATestTopDownGameMode::BeginPlay"));
 
 }

@@ -254,8 +254,7 @@ void APlayerPawn::TestPlacement(const FInputActionValue& Value)
 {
 	if (RTSPlayerController == nullptr)
 		return;
-
-	RTSPlayerController->SetPlacementPreview();
+	RTSPlayerController->SetPlacementMode(true);
 }
 
 void APlayerPawn::Place(const FInputActionValue& Value)
@@ -273,10 +272,8 @@ void APlayerPawn::PlaceCancel(const FInputActionValue& Value)
 	if (RTSPlayerController == nullptr)
 		return;
 
-	if (RTSPlayerController->IsPlacementModeEnabled())
-	{
-		RTSPlayerController->PlaceCancel();
-	}
+	RTSPlayerController->SetPlacementMode(false);
+
 }
 
 

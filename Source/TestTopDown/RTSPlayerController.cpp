@@ -12,6 +12,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "ABPlayerState.h"
 #include "TestTopDownGameMode.h"
+#include "GridActor.h"
 #include "BaseUnit.h"
 
 
@@ -19,6 +20,18 @@ ARTSPlayerController::ARTSPlayerController(const FObjectInitializer& ObjectIniti
 {
 	bPlacementModeEnabled = false;
 }
+
+void ARTSPlayerController::SetupInputComponent()
+{
+	Super::SetupInputComponent();
+
+	if (UEnhancedInputLocalPlayerSubsystem* InputSubsystem = ULocalPlayer::GetSubsystem< UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
+	{
+		InputSubsystem->ClearAllMappings();
+		SetInputDefault();
+	}
+}
+
 void ARTSPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -33,10 +46,17 @@ void ARTSPlayerController::BeginPlay()
 	GameInstance = Cast<UMOBAGameInstance>(GetGameInstance());
 	if (GameInstance == nullptr) return;
 	
+	GameMode = Cast<ATestTopDownGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
+	if (GameMode == nullptr) return;
+
+	Grid = GameMode->GetGrid();
+	if (Grid == nullptr) return;
+
 	if (IsLocalPlayerController())
 	{
 		Server_SpawnBasicWorker();
 	}
+	SetPlacementMode(false);
 }
 void ARTSPlayerController::PostInitializeComponents()
 {
@@ -48,7 +68,6 @@ void ARTSPlayerController::Server_SpawnBasicWorker_Implementation()
 	auto RaceData = Cast<URaceData>(RaceDataAsset);
 	if (RaceData == nullptr) return;
 
-	auto GameMode = Cast<ATestTopDownGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
 	if (GameMode == nullptr) return;
 
 	auto PlayerStart = GameMode->ChoosePlayerStart(this);
@@ -70,39 +89,84 @@ void ARTSPlayerController::UpdatePlacement() const
 {
 	if (PlacementPreviewActor == nullptr)
 		return;
+	if (Grid == nullptr)
+		return;
 
-	PlacementPreviewActor->SetActorLocation(GetMousePositionOnSurface());
-}
-void ARTSPlayerController::SetupInputComponent()
-{
-	Super::SetupInputComponent();
+	std::pair<int32, int32> Tile = Grid->LocationToTile(GetMousePositionOnSurface());
+	if (Grid->IsTileValid(Tile.first, Tile.second) == false)
+		return;
 
-	if (UEnhancedInputLocalPlayerSubsystem* InputSubsystem = ULocalPlayer::GetSubsystem< UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
-	{
-		InputSubsystem->ClearAllMappings();
-		SetInputDefault();
-	}
+	FVector TileLocation = Grid->TileToGridLocation(Tile.first, Tile.second, true);
+	Grid->SetSelectedTile(Tile.first, Tile.second);
+	PlacementPreviewActor->SetActorLocation(TileLocation);
 }
 
-
-void ARTSPlayerController::SetPlacementPreview()
+FVector ARTSPlayerController::GetMousePositionOnSurface() const
 {
-	if (PreviewActorType && !bPlacementModeEnabled)
+	FVector WorldLocation, WorldDirection;
+	DeprojectMousePositionToWorld(WorldLocation, WorldDirection);
+	FHitResult OutHit;
+
+	UWorld* World = GetWorld();
+	if (World == nullptr)return FVector::ZeroVector;
+
+	if (World->LineTraceSingleByChannel(OutHit, WorldLocation, WorldLocation + (WorldDirection * 100000.f), ECollisionChannel::ECC_Visibility))
 	{
-		FTransform SpawnTransform;
-		SpawnTransform.SetLocation(GetMousePositionOnSurface());
-		FActorSpawnParameters SpawnParams;
-		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-		PlacementPreviewActor = GetWorld()->SpawnActor<APlacementPreview>(PreviewActorType, SpawnTransform, SpawnParams);
-
-		if (PlacementPreviewActor)
+		if (OutHit.bBlockingHit)
 		{
-			SetInputPlacement();
-
-			bPlacementModeEnabled = true;
+			return OutHit.Location;
 		}
 	}
+	return FVector::ZeroVector;
+}
+
+
+void ARTSPlayerController::SetPlacementMode(bool bNewMode)
+{
+	if (bPlacementModeEnabled == bNewMode)
+		return;
+	if (Grid == nullptr)
+		return;
+
+	bool bResult = true;
+	if (bNewMode == true) 
+	{
+		bResult = SetPlacementPreview();	
+	}
+	else if(bNewMode == false)
+	{
+		EndPlacement();
+	}
+	if (bResult == false)
+		return;
+
+	SetInputPlacement(bNewMode);
+	Grid->SetVisibility(bNewMode);
+	bPlacementModeEnabled = bNewMode;
+}
+bool ARTSPlayerController::SetPlacementPreview()
+{
+	if (bPlacementModeEnabled == true)
+		return false;
+	if (PreviewActorType == nullptr)
+		return false;
+
+	FTransform SpawnTransform;
+	SpawnTransform.SetLocation(GetMousePositionOnSurface());
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	PlacementPreviewActor = GetWorld()->SpawnActor<APlacementPreview>(PreviewActorType, SpawnTransform, SpawnParams);
+
+	if (PlacementPreviewActor == nullptr)
+		return false;
+
+	return true;
+
+}
+void ARTSPlayerController::EndPlacement_Implementation()
+{
+	PlacementPreviewActor->Destroy();
 }
 void ARTSPlayerController::SetInputPlacement(const bool Enable) const
 {
@@ -121,17 +185,31 @@ void ARTSPlayerController::SetInputPlacement(const bool Enable) const
 		}
 	}
 }
+
+void ARTSPlayerController::PlaceCancel()
+{
+	if (bPlacementModeEnabled == false)
+		return;
+	if (PlacementPreviewActor == nullptr)
+		return;
+
+	bPlacementModeEnabled = false;
+
+
+}
 void ARTSPlayerController::Place()
 {
 	if (!IsPlacementModeEnabled() || !PlacementPreviewActor)
 		return;
-	bPlacementModeEnabled = false;
-	SetInputPlacement(false);
+
+	//bPlacementModeEnabled = false;
+	//SetInputPlacement(false);
 	Server_Place(EUnitType::Fox, PlacementPreviewActor->GetActorTransform());
-	EndPlacement();
-	auto DefaultPawn = GetPawn();
-	UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::Place DefaultPawn: %s, Loc : %s"), *DefaultPawn->GetName(), *DefaultPawn->GetActorLocation().ToString());
+	SetPlacementMode(false);
+	//EndPlacement();
+
 }
+
 void ARTSPlayerController::Server_Place_Implementation(EUnitType unitType, FTransform spawnTransform)
 {
 	SpawnUnit(unitType, spawnTransform);
@@ -159,22 +237,8 @@ void ARTSPlayerController::SpawnUnit(EUnitType unitType, FTransform spawnTransfo
 	}
 }
 
-void ARTSPlayerController::PlaceCancel()
-{
-	if (!IsPlacementModeEnabled() || !PlacementPreviewActor)
-		return;
-
-	bPlacementModeEnabled = false;
-	SetInputPlacement(false);
-	EndPlacement();
-}
 
 
-
-void ARTSPlayerController::EndPlacement_Implementation()
-{
-	PlacementPreviewActor->Destroy();
-}
 void ARTSPlayerController::SetInputDefault(const bool Enable) const
 {
 	ensureMsgf(PlayerActionsAsset, TEXT("PlayerActionAsset is Null"));
@@ -503,24 +567,6 @@ FVector ARTSPlayerController::GetMousePositionOnTerrain() const
 	return FVector::ZeroVector;
 }
 
-FVector ARTSPlayerController::GetMousePositionOnSurface() const
-{
-	FVector WorldLocation, WorldDirection;
-	DeprojectMousePositionToWorld(WorldLocation, WorldDirection);
-	FHitResult OutHit;
-
-	UWorld* World = GetWorld();
-	if (World == nullptr)return FVector::ZeroVector;
-
-	if (World->LineTraceSingleByChannel(OutHit, WorldLocation, WorldLocation + (WorldDirection * 100000.f), ECollisionChannel::ECC_Visibility))
-	{
-		if (OutHit.bBlockingHit)
-		{
-			return OutHit.Location;
-		}
-	}
-	return FVector::ZeroVector;
-}
 
 
 bool ARTSPlayerController::IsActorSelected(AActor* ActorToCheck) const

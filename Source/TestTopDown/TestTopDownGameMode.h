@@ -21,7 +21,7 @@ public:
 	ATestTopDownGameMode();
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 	virtual void Logout(AController* Exiting) override;
-
+	class AGridActor* GetGrid() { return *Grid.begin(); }
 protected:
 	virtual void BeginPlay() override;
 	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
@@ -30,6 +30,7 @@ public:
 protected:
 	uint32 MaxPlayerCount = 2;
 	uint32 currentPlayerCount = 0;
+	TArray<class AGridActor*> Grid;
 	//static constexpr char* APP_ID = RAW_APP_ID;
 	//CSteamID myId;
 };

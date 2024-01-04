@@ -29,5 +29,5 @@ void ALobbyGameMode::StartGame()
 	UE_LOG(LogTemp, Warning, TEXT("ALobbyGameMode::StartGame"));
 	gameInstance->StartSession();
 	bUseSeamlessTravel = true;
-	GetWorld()->ServerTravel("/Game/MOBA/Maps/Game?listen");
+	GetWorld()->ServerTravel("/Game/TopDown/Maps/Game?listen");
 }

@@ -125,7 +125,7 @@ void UMOBAGameInstance::OnCreateSessionComplete(FName sessionName, bool isSuccee
 void UMOBAGameInstance::Host()
 {
 	UE_LOG(LogTemp, Warning, TEXT(" UMOBAGameInstance::Host()"));
-	GetWorld()->ServerTravel("/Game/MOBA/Maps/Lobby?listen");
+	GetWorld()->ServerTravel("/Game/TopDown/Maps/Lobby?listen"); 
 }
 
 
