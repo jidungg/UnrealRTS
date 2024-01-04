@@ -119,7 +119,10 @@ public:
 	bool IsPlacementModeEnabled() const { return bPlacementModeEnabled; }
 
 	UFUNCTION()
-	void SetPlacementPreview();
+	void SetPlacementMode(bool bNewMode);
+
+	UFUNCTION()
+	bool SetPlacementPreview();
 
 	UFUNCTION()
 	void Place();
@@ -132,7 +135,8 @@ public:
 
 protected:
 	class UMOBAGameInstance* GameInstance;
-
+	class ATestTopDownGameMode* GameMode;
+	class AGridActor* Grid;
 	UPROPERTY(ReplicatedUsing = OnRep_Selected)
 	TArray<AActor*> Selected;
 
@@ -160,4 +164,6 @@ protected:
 	/** FX Class that we will spawn when clicking */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	class UNiagaraSystem* FXCursor;
+
+
 };
