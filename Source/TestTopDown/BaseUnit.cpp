@@ -125,13 +125,10 @@ bool ABaseUnit::IsOrientated() const
 
 void ABaseUnit::SetMoveMarkerLocation(const FVector Location)
 {
-	UE_LOG(LogTemp, Warning, TEXT("ABaseUnit::SetMoveMarkerLocation 0"));
 	if (!MoveMarkerClass)
 		return;
-	UE_LOG(LogTemp, Warning, TEXT("ABaseUnit::SetMoveMarkerLocation 1"));
 	if (!MoveMarker)
 		return;
-	UE_LOG(LogTemp, Warning, TEXT("ABaseUnit::SetMoveMarkerLocation 2"));
 	MoveMarker->SetActorLocation(GetPositionTransform(Location).GetLocation());
 	MoveMarker->SetActorHiddenInGame(false);
 }

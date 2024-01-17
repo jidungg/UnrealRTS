@@ -35,7 +35,7 @@ void ARTSPlayerController::SetupInputComponent()
 void ARTSPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-	UE_LOG(LogTemp, Warning, TEXT("ARTSPlayerController::BeginPlay "));
+
 	FInputModeGameAndUI InputMode;
 	InputMode.SetHideCursorDuringCapture(false);
 	SetInputMode(InputMode);

@@ -21,7 +21,7 @@ void URaceButtonWidget::NativePreConstruct()
 	Super::NativePreConstruct();
 
 	ButtonIndex = static_cast<int>(Race);
-
+	
 	if (ButtonText)
 	{
 		ButtonText->SetText(UEnum::GetDisplayValueAsText(Race));

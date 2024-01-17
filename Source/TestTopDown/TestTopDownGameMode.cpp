@@ -10,6 +10,7 @@
 #include "GameFramework/PlayerStart.h"
 #include "MyPlayerStart.h"
 #include "GridActor.h"
+#include "Blueprint/UserWidget.h"
 #include "UObject/ConstructorHelpers.h"
 
 
@@ -18,6 +19,10 @@ ATestTopDownGameMode::ATestTopDownGameMode()
 {
 	// use our custom PlayerController class
 	PlayerControllerClass = ATestTopDownPlayerController::StaticClass();
+
+	ConstructorHelpers::FClassFinder<UUserWidget> GameUIBPClass(TEXT("/Game/Blueprints/UI/WBP_GameUI"));
+	if (GameUIBPClass.Class == nullptr) return;
+	GameUIClass = GameUIBPClass.Class;
 }
 
 void ATestTopDownGameMode::PostLogin(APlayerController* NewPlayer)
@@ -48,10 +53,17 @@ void ATestTopDownGameMode::BeginPlay()
 	{
 		Grid.Add(*It);
 	}
-	UE_LOG(LogTemp, Warning, TEXT("ATestTopDownGameMode::BeginPlay"));
 
+	AddGameUI();
 }
 
+void ATestTopDownGameMode::AddGameUI()
+{
+	if (GameUIClass == nullptr)return;
+	GameUI = CreateWidget(GetWorld(), GameUIClass);
+	
+	GameUI->AddToViewport();
+}
 AActor* ATestTopDownGameMode::ChoosePlayerStart_Implementation(AController* Player)
 {
 	if (Player->StartSpot != nullptr)
@@ -69,4 +81,5 @@ AActor* ATestTopDownGameMode::ChoosePlayerStart_Implementation(AController* Play
 	UE_LOG(LogTemp, Error, TEXT("ATestTopDownGameMode::GetRightPlayerStart Someting Wrong"));
 	return nullptr;
 }
+
 

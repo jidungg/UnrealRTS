@@ -55,18 +55,17 @@ void APlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 		return;
 	if (const UPlayerInputActions* PlayerActions = Cast< UPlayerInputActions>(PC->GetInputActionAsset()))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::SetupPlayerInputComponent"));
 		EPlayerInputActions::BindInput_TriggerOnly(Input, PlayerActions->Move, this, &APlayerPawn::Move);
 		EPlayerInputActions::BindInput_TriggerOnly(Input, PlayerActions->Look, this, &APlayerPawn::Look);
 		EPlayerInputActions::BindInput_TriggerOnly(Input, PlayerActions->Zoom, this, &APlayerPawn::Zoom);
 		EPlayerInputActions::BindInput_TriggerOnly(Input, PlayerActions->Rotate, this, &APlayerPawn::Rotate);
 		EPlayerInputActions::BindInput_StartTriggerComplete(Input, PlayerActions->Select, this, &APlayerPawn::Select, &APlayerPawn::SelectHold, &APlayerPawn::SelectEnd);
-		EPlayerInputActions::BindInput_TriggerOnly(Input, PlayerActions->TestPlacement, this, &APlayerPawn::TestPlacement);
+		EPlayerInputActions::BindInput_TriggerOnly(Input, PlayerActions->TestPlacement, this, &APlayerPawn::OnTestPlacement);
 		EPlayerInputActions::BindInput_TriggerOnly(Input, PlayerActions->SelectDoubleTap, this, &APlayerPawn::SelectDoubleTap);
 		EPlayerInputActions::BindInput_Simple(Input, PlayerActions->Command, this, &APlayerPawn::CommandStart, &APlayerPawn::Command);
 
-		EPlayerInputActions::BindInput_TriggerOnly(Input, PlayerActions->Place, this, &APlayerPawn::Place);
-		EPlayerInputActions::BindInput_TriggerOnly(Input, PlayerActions->PlaceCancel, this, &APlayerPawn::PlaceCancel);
+		EPlayerInputActions::BindInput_TriggerOnly(Input, PlayerActions->Place, this, &APlayerPawn::OnPlace);
+		EPlayerInputActions::BindInput_TriggerOnly(Input, PlayerActions->PlaceCancel, this, &APlayerPawn::OnPlaceCancel);
 
 		EPlayerInputActions::BindInput_Simple(Input, PlayerActions->Shift, this, &APlayerPawn::Shift, &APlayerPawn::Shift);
 		EPlayerInputActions::BindInput_Simple(Input, PlayerActions->ShiftSelect, this, &APlayerPawn::ShiftSelect, &APlayerPawn::ShiftSelectEnd);
@@ -93,8 +92,6 @@ void APlayerPawn::BeginPlay()
 	TargetRotation = FRotator(Rotation.Pitch - 50, Rotation.Yaw, 0.0f);
 	RTSPlayerController = Cast<ARTSPlayerController>(Controller);
 	CreateSelectionBox();
-
-	UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::BeginPlay Loca: %s"),*GetActorLocation().ToString());
 }
 
 void APlayerPawn::PostInitializeComponents()
@@ -104,7 +101,6 @@ void APlayerPawn::PostInitializeComponents()
 }
 void APlayerPawn::CreateSelectionBox()
 {
-	UE_LOG(LogTemp, Warning, TEXT("ATestTopDownGameMode::CreateSelectionBox"));
 	if (SelectionBoxClass == nullptr)return;
 
 	UWorld* World = GetWorld();
@@ -250,30 +246,19 @@ void APlayerPawn::Zoom(const FInputActionValue& Value)
 		TargetZoom = FMath::Clamp(TargetZoom + (Value.Get<float>() * ZoomSpeed), MinZoom, MaxZoom);
 	}
 }
-void APlayerPawn::TestPlacement(const FInputActionValue& Value)
+void APlayerPawn::OnTestPlacement(const FInputActionValue& Value)
 {
-	if (RTSPlayerController == nullptr)
-		return;
-	RTSPlayerController->SetPlacementMode(true);
+	TestPlacement();
+
 }
 
-void APlayerPawn::Place(const FInputActionValue& Value)
+void APlayerPawn::OnPlace(const FInputActionValue& Value)
 {
-	if (RTSPlayerController == nullptr)
-		return;
-
-	if (RTSPlayerController->IsPlacementModeEnabled())
-	{
-		RTSPlayerController->Place();
-	}
+	Place();
 }
-void APlayerPawn::PlaceCancel(const FInputActionValue& Value)
+void APlayerPawn::OnPlaceCancel(const FInputActionValue& Value)
 {
-	if (RTSPlayerController == nullptr)
-		return;
-
-	RTSPlayerController->SetPlacementMode(false);
-
+	PlaceCancel();
 }
 
 
@@ -541,6 +526,32 @@ void APlayerPawn::CtrlCommand(const FInputActionValue& Value)
 		return;
 	UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::CtrlCommand"));
 	RTSPlayerController->CommandSelected(CreateCommandData(ECommandType::CommandMoveAttack));
+}
+
+void APlayerPawn::TestPlacement()
+{
+	if (RTSPlayerController == nullptr)
+		return;
+	RTSPlayerController->SetPlacementMode(true);
+}
+
+void APlayerPawn::Place()
+{
+	if (RTSPlayerController == nullptr)
+		return;
+
+	if (RTSPlayerController->IsPlacementModeEnabled())
+	{
+		RTSPlayerController->Place();
+	}
+}
+
+void APlayerPawn::PlaceCancel()
+{
+	if (RTSPlayerController == nullptr)
+		return;
+
+	RTSPlayerController->SetPlacementMode(false);
 }
 
 

@@ -28,6 +28,8 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UMaterial* BaseMaterial;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	UProceduralMeshComponent* LineProceduralMeshComponent;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)

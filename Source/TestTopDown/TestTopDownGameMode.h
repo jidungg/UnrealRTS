@@ -26,13 +26,16 @@ protected:
 	virtual void BeginPlay() override;
 	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
 public:
-	
+	UFUNCTION(BlueprintCallable)
+	void AddGameUI();
 protected:
 	uint32 MaxPlayerCount = 2;
 	uint32 currentPlayerCount = 0;
 	TArray<class AGridActor*> Grid;
-	//static constexpr char* APP_ID = RAW_APP_ID;
-	//CSteamID myId;
+
+private:
+	TSubclassOf<class UUserWidget> GameUIClass;
+	class UUserWidget* GameUI;
 };
 
 

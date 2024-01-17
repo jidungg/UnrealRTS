@@ -31,8 +31,6 @@ void AGridActor::OnConstruction(const FTransform& Transform)
 }
 UMaterialInstanceDynamic* AGridActor::CreateMaterialInstance(FLinearColor Color, float Opacity)
 {
-	UMaterial* BaseMaterial = LoadObject<UMaterial>(nullptr, TEXT("/Game/Material/M_Grid"));
-
 	if (!BaseMaterial)
 		return nullptr;
 

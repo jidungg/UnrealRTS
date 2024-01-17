@@ -129,16 +129,16 @@ protected://Mouse input
 	void Zoom(const FInputActionValue& Value);
 
 	UFUNCTION()
-	void TestPlacement(const FInputActionValue& Value);
-
-	UFUNCTION()
 	void SelectDoubleTap(const FInputActionValue& Value);
 
 	UFUNCTION()
-	void Place(const FInputActionValue& Value);
+	void OnTestPlacement(const FInputActionValue& Value);
 
 	UFUNCTION()
-	void PlaceCancel(const FInputActionValue& Value);
+	void OnPlace(const FInputActionValue& Value);
+
+	UFUNCTION()
+	void OnPlaceCancel(const FInputActionValue& Value);
 
 	UFUNCTION()
 	FCommandData CreateCommandData(const ECommandType Type) const;
@@ -178,5 +178,13 @@ protected://Mouse input
 	UFUNCTION()
 	void CtrlCommand(const FInputActionValue& Value);
 
+public:
+	UFUNCTION()
+	void TestPlacement();
 
+	UFUNCTION()
+	void Place();
+
+	UFUNCTION()
+	void PlaceCancel();
 };
