@@ -4,8 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "SimpleUIButtonWidget.h"
-#include "../Data/RaceData.h"
 #include "RaceButtonWidget.generated.h"
+
+enum class ERace : uint8;
 
 /**
  * 
@@ -19,7 +20,7 @@ public:
 	virtual void NativePreConstruct() override;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Settings")
-	TEnumAsByte<ERaceType> Race;
+	ERace Race;
 
 
 protected:

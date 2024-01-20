@@ -11,7 +11,7 @@
 #include "Materials/Material.h"
 #include "Engine/World.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "MyAIController.h"
+#include "Core/MyAIController.h"
 
 ABaseUnit::ABaseUnit()
 {
@@ -70,14 +70,12 @@ void ABaseUnit::CreateMoveMarker()
 {
 	if (MoveMarkerClass == nullptr)
 		return;
-	UE_LOG(LogTemp, Warning, TEXT("ABaseUnit::CreateMoveMarker 1"));
 	FActorSpawnParameters Params;
 	Params.Instigator = this;
 	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 	if (UWorld* WorldContext = GetWorld())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("ABaseUnit::CreateMoveMarker 2"));
 		MoveMarker = WorldContext->SpawnActor<AActor>(MoveMarkerClass, GetPositionTransform(GetActorLocation()), Params);
 	}
 }
@@ -85,10 +83,8 @@ void ABaseUnit::CreateMoveMarker()
 void ABaseUnit::Destroyed()
 {
 	Super::Destroyed();
-	UE_LOG(LogTemp, Warning, TEXT("ABaseUnit::Destroyed 1"));
 	if (MoveMarker != nullptr)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("ABaseUnit::Destroyed 2"));
 		MoveMarker->Destroy();
 	}
 }
@@ -132,32 +128,29 @@ void ABaseUnit::SetMoveMarkerLocation(const FVector Location)
 	MoveMarker->SetActorLocation(GetPositionTransform(Location).GetLocation());
 	MoveMarker->SetActorHiddenInGame(false);
 }
-void ABaseUnit::Select()
-{
-	UE_LOG(LogTemp, Warning, TEXT(" ABaseUnit::Select"));
-	Selected = true;
-	Highlight(Selected);
-}
-
-void ABaseUnit::Deselect()
-{
-	UE_LOG(LogTemp, Warning, TEXT(" ABaseUnit::Deselect"));
-	Selected = false;
-	Highlight(Selected);
-}
-
-void ABaseUnit::Highlight(const bool Highlight)
-{
-	TArray<UPrimitiveComponent*> Components;
-	GetComponents<UPrimitiveComponent>(Components);
-	for (UPrimitiveComponent* VisualComp : Components)
-	{
-		if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(VisualComp))
-		{
-			Prim->SetRenderCustomDepth(Highlight);
-		}
-	}
-}
+//void ABaseUnit::Select()
+//{
+//	Selected = true;
+//	ISelectable::Select();
+//}
+//
+//void ABaseUnit::Deselect()
+//{
+//	Selected = false;
+//	ISelectable::Deselect();
+//}
+//void ABaseUnit::Highlight(const bool Highlight)
+//{
+//	TArray<UPrimitiveComponent*> Components;
+//	GetComponents<UPrimitiveComponent>(Components);
+//	for (UPrimitiveComponent* VisualComp : Components)
+//	{
+//		if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(VisualComp))
+//		{
+//			Prim->SetRenderCustomDepth(Highlight);
+//		}
+//	}
+//}
 
 void ABaseUnit::CommandMoveToLocation(const FCommandData CommandData)
 {

@@ -2,7 +2,7 @@
 
 
 #include "HeroMenu.h"
-#include "../PlayerPawn.h"
+#include "../Core/PlayerPawn.h"
 #include "Components/Button.h"
 
 bool UHeroMenu::Initialize()

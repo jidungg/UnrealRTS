@@ -38,12 +38,11 @@ private:
 
 public:
 	//ISelectable interface
-	virtual void Select() override;
-	virtual void Deselect() override;
-	virtual void Highlight(const bool Highlight) override;
-
-	UPROPERTY()
-	bool Selected;
+	//virtual void Select() override;
+	//virtual void Deselect() override;
+	//virtual void Highlight(const bool Highlight) override;
+	//UPROPERTY()
+	//bool Selected;
 
 public:
 	UFUNCTION()

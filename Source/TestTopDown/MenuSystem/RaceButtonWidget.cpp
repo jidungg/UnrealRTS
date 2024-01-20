@@ -4,9 +4,7 @@
 #include "RaceButtonWidget.h"
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
-#include "Kismet/GameplayStatics.h"
-#include "../MOBAGameInstance.h"
-#include "../ABPlayerState.h"
+#include "../Core/MOBAGameInstance.h"
 
 void URaceButtonWidget::NativeOnInitialized()
 {
@@ -30,7 +28,7 @@ void URaceButtonWidget::NativePreConstruct()
 
 void URaceButtonWidget::OnRaceButtonClicked()
 {
-	Cast<UMOBAGameInstance>(GetGameInstance())->Race = Race;
+	Cast<UMOBAGameInstance>(GetGameInstance())->Deck.Race = Race;
 	UE_LOG(LogTemp, Warning, TEXT("URaceButtonWidget::OnRaceButtonClicked %d"), Race);
 }
 

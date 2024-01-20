@@ -22,10 +22,12 @@ class TESTTOPDOWN_API ISelectable
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
+
+	bool Selected;
 	UFUNCTION()
-	virtual void Select() abstract;
+	virtual void Select();
 	UFUNCTION()
-	virtual void Deselect() abstract;
+	virtual void Deselect();
 	UFUNCTION()
-	virtual void Highlight(const bool Highlight) abstract;
+	virtual void Highlight(const bool Highlight);
 };

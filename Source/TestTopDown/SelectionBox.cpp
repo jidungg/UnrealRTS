@@ -6,7 +6,7 @@
 #include "Components/Boxcomponent.h"
 #include "Components/DecalComponent.h"
 #include "Kismet/GameplayStatics.h"
-#include "RTSPlayerController.h"
+#include "Core/RTSPlayerController.h"
 #include "Selectable.h"
 #include "Kismet/KismetMathLibrary.h"
 
@@ -126,7 +126,7 @@ void ASelectionBox::HandleHighlight(AActor* ActorInBox, const bool Highlight) co
 void ASelectionBox::StartBoxSelection(FVector Position, const FRotator Rotation)
 {
 	if (DecalComponent == nullptr) return;
-	UE_LOG(LogTemp, Warning, TEXT("ASelectionBox::Start"));
+
 	StartLocation = FVector(Position.X, Position.Y, 0.f);
 	StartRotation = FRotator(0.f, Rotation.Yaw, 0.f);
 
