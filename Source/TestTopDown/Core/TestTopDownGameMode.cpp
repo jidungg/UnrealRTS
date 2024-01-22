@@ -2,11 +2,11 @@
 
 #include "TestTopDownGameMode.h"
 #include "RTSPlayerController.h"
-#include "ABPlayerState.h"
 #include "EngineUtils.h"
 #include "GameFramework/PlayerStart.h"
 #include "MyPlayerStart.h"
-
+#include "MOBAGameInstance.h"
+#include "../BaseUnit.h"
 #include "UObject/ConstructorHelpers.h"
 
 
@@ -23,12 +23,31 @@ void ATestTopDownGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 	
-	auto RTSPlayerController = Cast<ARTSPlayerController>(NewPlayer);
-	if (RTSPlayerController == nullptr) return;
-
 	currentPlayerCount++;	
-	
+	SpawnBasicWorker(NewPlayer);
 	UE_LOG(LogTemp, Warning, TEXT("ATestTopDownGameMode::PostLogin currentPlayerCount : %d"), currentPlayerCount);	
+}
+void ATestTopDownGameMode::SpawnBasicWorker(APlayerController* NewPlayer)
+{
+	GameInstance = Cast<UMOBAGameInstance>(GetGameInstance());
+	if (GameInstance == nullptr) return;
+
+	FDeckStruct Deck;
+	if (GameInstance->GetCurrentDeck(Deck) == false) return;
+
+	ESquad UnitType = GameInstance->GetBasicWorker(Deck.Race);
+	if (UnitType == ESquad::None) return;
+
+	TSubclassOf<ABaseUnit> UnitClass = GameInstance->GetSquadBP(UnitType);
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	
+	ABaseUnit* NewUnit = GetWorld()->SpawnActor<ABaseUnit>(UnitClass, ChoosePlayerStart(NewPlayer)->GetActorTransform(), SpawnParams);
+	if (NewUnit != nullptr)
+	{
+		NewUnit->SetOwner(NewPlayer);
+	}
 }
 
 void ATestTopDownGameMode::Logout(AController* Exiting)
@@ -61,5 +80,6 @@ AActor* ATestTopDownGameMode::ChoosePlayerStart_Implementation(AController* Play
 	UE_LOG(LogTemp, Error, TEXT("ATestTopDownGameMode::GetRightPlayerStart Someting Wrong"));
 	return nullptr;
 }
+
 
 

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
+#include "DataHeader.h"
 #include "BuildablDataAsset.generated.h"
 
 
@@ -23,5 +24,5 @@ public:
 	}
 
 	UPROPERTY(EditAnywhere)
-	TArray<struct FBuildableDataRow> BuildableList;
+	TMap<EBuildable, struct FBuildableDataRow> BuildableMap;
 };

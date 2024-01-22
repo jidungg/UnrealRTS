@@ -7,6 +7,9 @@
 #include "OnlineSessionSettings.h"
 #include "../MenuSystem/MenuWidget.h"
 #include "../MenuSystem/MainMenu.h"
+#include "../Data/SquadDataAsset.h"
+#include "../Data/BuildablDataAsset.h"
+#include "../Data/RaceDataAsset.h"
 #include "ABPlayerState.h"
 
 
@@ -17,14 +20,6 @@ UMOBAGameInstance::UMOBAGameInstance(const FObjectInitializer& ObjectIn ...)
 	ConstructorHelpers::FClassFinder<UMenuWidget> mainMenuBPClass(TEXT("/Game/MenuSystem/WBP_MainMenu"));
 	if (mainMenuBPClass.Class == nullptr) return;
 	mainMenuClass = mainMenuBPClass.Class;
-
-	ConstructorHelpers::FClassFinder<UUserWidget> inGameMenuBPClass(TEXT("/Game/Blueprints/UI/WBP_GameUI"));
-	if (inGameMenuBPClass.Class == nullptr) return;
-	inGameMenuClass = inGameMenuBPClass.Class;
-
-	ConstructorHelpers::FClassFinder<UMenuWidget> inGameEscmenuBPClass(TEXT("/Game/MenuSystem/WBP_InGameEscMenu"));
-	if (inGameEscmenuBPClass.Class == nullptr) return;
-	inGameEscMenuClass = inGameEscmenuBPClass.Class;
 }
 
 void UMOBAGameInstance::Init()
@@ -59,21 +54,7 @@ void UMOBAGameInstance::LoadMainMenu()
 	mainMenu->Setup();
 	mainMenu->SetMenuInterface(this);
 }
-void UMOBAGameInstance::LoadInGameMenu()
-{
-	if (inGameMenuClass == nullptr)return;
-	UUserWidget* inGameMenu = CreateWidget<UUserWidget>(this, inGameMenuClass);
-	UE_LOG(LogTemp, Warning, TEXT("LoadInGameMenu"));
-	inGameMenu->AddToViewport();
-}
-void UMOBAGameInstance::LoadInGameEscMenu()
-{
-	if (inGameEscMenuClass == nullptr)return;
-	UMenuWidget* inGameEscMenu = CreateWidget<UMenuWidget>(this, inGameEscMenuClass);
-	UE_LOG(LogTemp, Warning, TEXT("LoadInGameEscMenu"));
-	inGameEscMenu->Setup();
-	inGameEscMenu->SetMenuInterface(this);
-}
+
 
 void UMOBAGameInstance::OnHostButtonClicked(FString roomName)
 {
@@ -380,10 +361,55 @@ void UMOBAGameInstance::CheckSearchOptions()
 
 }
 
-void UMOBAGameInstance::CheckRace()
+TSubclassOf<ABaseUnit> UMOBAGameInstance::GetSquadBP(ESquad Type)
 {
-	UE_LOG(LogTemp, Warning, TEXT("UMOBAGameInstance::CheckRace %d"), Deck.Race);
+	if (SquadDataAsset == nullptr)
+		return nullptr;
+	if (SquadDataAsset->SquadMap.Contains(Type) == false)
+		return nullptr;
+	
+	return SquadDataAsset->SquadMap[Type].BPClass;
 }
+
+TSubclassOf<ABaseBuilding> UMOBAGameInstance::GetBuildableBP(EBuildable Type)
+{
+	if (BuildableDataAsset == nullptr)
+		return nullptr;
+	if (BuildableDataAsset->BuildableMap.Contains(Type) == false)
+		return nullptr;
+
+	return BuildableDataAsset->BuildableMap[Type].BPClass;
+}
+
+bool UMOBAGameInstance::GetBuildableDataRow(EBuildable Type, UPARAM(ref) FBuildableDataRow& DataRow)
+{
+	if (BuildableDataAsset == nullptr)
+		return false;
+	if (BuildableDataAsset->BuildableMap.Contains(Type) == false)
+		return false;
+	DataRow = BuildableDataAsset->BuildableMap[Type];
+	return true;
+}
+
+ESquad UMOBAGameInstance::GetBasicWorker(ERace Type)
+{
+	if (RaceDataAsset == nullptr)
+		return ESquad::None;
+	if (RaceDataAsset->RaceMap.Contains(Type) == false)
+		return ESquad::None;
+
+	return RaceDataAsset->RaceMap[Type].BasicWorker;
+}
+
+bool UMOBAGameInstance::GetCurrentDeck(FDeckStruct& deck)
+{
+	if(Deck.Num() <= CurrentDeckIdx)
+		return false;
+	deck = Deck[CurrentDeckIdx];
+	return true;
+}
+
+
 
 
 

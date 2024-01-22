@@ -20,7 +20,6 @@
 ARTSPlayerController::ARTSPlayerController(const FObjectInitializer& ObjectInitializer)
 {
 	bPlacementModeEnabled = false;
-
 }
 
 void ARTSPlayerController::SetupInputComponent()
@@ -69,13 +68,11 @@ void ARTSPlayerController::PostInitializeComponents()
 }
 void ARTSPlayerController::Server_SpawnBasicWorker_Implementation()
 {
-	//auto RaceData = Cast<URaceData>(RaceDataAsset);
-	//if (RaceData == nullptr) return;
-
-	//auto PlayerStart = GameMode->ChoosePlayerStart(this);
-	//if (PlayerStart == nullptr) return;
-	//
-	//SpawnUnit(RaceData->GetBasicWorker(GameInstance->Race), PlayerStart->GetActorTransform());
+	
+	/*auto PlayerStart = GameMode->ChoosePlayerStart(this);
+	if (PlayerStart == nullptr) return;
+	
+	SpawnUnit(RaceData->GetBasicWorker(GameInstance->Race), PlayerStart->GetActorTransform());*/
 }
 void ARTSPlayerController::Tick(float DeltaTime)
 {
@@ -212,23 +209,24 @@ void ARTSPlayerController::Server_Place_Implementation(ESquad unitType, FTransfo
 }
 void ARTSPlayerController::SpawnUnit(ESquad unitType, FTransform spawnTransform)
 {
-	//FTransform SpawnTransfrom;
-	//FVector Location = spawnTransform.GetLocation();
-	//SpawnTransfrom.SetLocation(FVector(Location.X, Location.Y, Location.Z + 100.f));
-	//FActorSpawnParameters SpawnParams;
-	//SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	if (GameInstance == nullptr)return;
 
-	//if (const UUnitData* UnitData = Cast<UUnitData>(UnitDataAsset))
-	//{
+	TSubclassOf<class ABaseUnit> UnitClass = GameInstance->GetSquadBP(unitType);
+	if (UnitClass == nullptr)return;
 
-	//	TSubclassOf<class ABaseUnit> UnitClass = UnitData->TypeToClass[unitType];
-	//	ABaseUnit* NewUnit = GetWorld()->SpawnActor<ABaseUnit>(UnitClass, SpawnTransfrom, SpawnParams);
+	FTransform SpawnTransfrom;
+	FVector Location = spawnTransform.GetLocation();
+	SpawnTransfrom.SetLocation(FVector(Location.X, Location.Y, Location.Z + 100.f));
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	//	if (NewUnit != nullptr)
-	//	{
-	//		NewUnit->SetOwner(this);
-	//	}
-	//}
+	ABaseUnit* NewUnit = GetWorld()->SpawnActor<ABaseUnit>(UnitClass, SpawnTransfrom, SpawnParams);
+
+	if (NewUnit != nullptr)
+	{
+		NewUnit->SetOwner(this);
+	}
+	
 }
 
 

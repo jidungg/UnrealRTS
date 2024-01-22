@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
+#include "DataHeader.h"
 #include "SquadDataAsset.generated.h"
 
 /**
@@ -22,5 +23,5 @@ public:
 	}
 
 	UPROPERTY(EditAnywhere)
-	TArray<struct FSquadDataRow> SquadList;
+	TMap<ESquad,  struct FSquadDataRow> SquadMap;
 };

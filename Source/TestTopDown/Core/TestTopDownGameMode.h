@@ -25,8 +25,10 @@ protected:
 	virtual void BeginPlay() override;
 	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
 
+	void SpawnBasicWorker(APlayerController* NewPlayer);
 
 protected:
+	class UMOBAGameInstance* GameInstance;
 	uint32 MaxPlayerCount = 2;
 	uint32 currentPlayerCount = 0;
 

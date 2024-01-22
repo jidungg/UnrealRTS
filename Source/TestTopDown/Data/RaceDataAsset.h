@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
+#include "DataHeader.h"
 #include "RaceDataAsset.generated.h"
 
 /**
@@ -22,5 +23,5 @@ public:
 	}
 
 	UPROPERTY(EditAnywhere)
-		TArray<struct FRaceDataRow> RaceList;
+		TMap<ERace, struct FRaceDataRow> RaceMap;
 };

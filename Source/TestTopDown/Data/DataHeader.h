@@ -28,7 +28,7 @@ public:
     {}
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-        ESquad Type;
+        FString Name;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
         TSubclassOf<class ABaseUnit> BPClass;
@@ -53,9 +53,8 @@ struct FBuildableDataRow : public FTableRowBase
     GENERATED_USTRUCT_BODY()
 
 public:
-
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-        EBuildable Type;
+        FString Name;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
         TSubclassOf<class ABaseBuilding> BPClass;
@@ -82,9 +81,8 @@ struct FRaceDataRow : public FTableRowBase
     GENERATED_USTRUCT_BODY()
 
 public:
-
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-        ERace Type;
+        FString Name;
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
         ESquad BasicWorker;
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -92,10 +90,14 @@ public:
 };
 
 USTRUCT(BlueprintType)
-struct FDeck
+struct FDeckStruct
 {
     GENERATED_BODY()
 public:
+    FDeckStruct() {  }
+    FDeckStruct(ERace race) { Race = race; }
+
+    bool IsValid() { return Race != ERace::None; }
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
         FString DeckName;
     UPROPERTY(EditAnywhere, BlueprintReadWrite)

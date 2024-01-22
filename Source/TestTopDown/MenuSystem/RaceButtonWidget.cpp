@@ -28,7 +28,7 @@ void URaceButtonWidget::NativePreConstruct()
 
 void URaceButtonWidget::OnRaceButtonClicked()
 {
-	Cast<UMOBAGameInstance>(GetGameInstance())->Deck.Race = Race;
+	//Cast<UMOBAGameInstance>(GetGameInstance())->Deck.Race = Race;
 	UE_LOG(LogTemp, Warning, TEXT("URaceButtonWidget::OnRaceButtonClicked %d"), Race);
 }
 

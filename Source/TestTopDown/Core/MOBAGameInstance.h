@@ -27,10 +27,6 @@ public: //Initializers
 public://Main menu Blueprint callables
 	UFUNCTION(BlueprintCallable)
 	void LoadMainMenu();
-	UFUNCTION(BlueprintCallable)
-		void LoadInGameMenu();
-	UFUNCTION(BlueprintCallable)
-	void LoadInGameEscMenu();
 
 
 public://Menu Interface overrides
@@ -73,17 +69,33 @@ public:
 	void CheckDefaultSearchOptions();
 	UFUNCTION(Exec)
 	void CheckSearchOptions();
-	UFUNCTION(Exec)
-	void CheckRace();
+
+	UFUNCTION(BlueprintCallable)
+	TSubclassOf<class ABaseUnit> GetSquadBP(ESquad Type);
+	UFUNCTION(BlueprintCallable)
+	TSubclassOf<class ABaseBuilding> GetBuildableBP(EBuildable Type);
+	UFUNCTION(BlueprintCallable)
+	bool GetBuildableDataRow(EBuildable Type, UPARAM(ref) FBuildableDataRow& DataRow);
+	UFUNCTION(BlueprintCallable)
+	ESquad GetBasicWorker(ERace Type);
+	UFUNCTION(BlueprintCallable)
+	bool GetCurrentDeck(FDeckStruct& deck);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TArray<FDeckStruct> Deck;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		int32 CurrentDeckIdx;
 
 	UPROPERTY(EditAnywhere)
-	FDeck Deck;
+		class USquadDataAsset* SquadDataAsset;
+	UPROPERTY(EditAnywhere)
+		class UBuildablDataAsset* BuildableDataAsset;
+	UPROPERTY(EditAnywhere)
+		class URaceDataAsset* RaceDataAsset;
+
 private:
 	TSubclassOf<class UUserWidget> mainMenuClass;
 	class UMainMenu* mainMenu;
-	TSubclassOf<class UUserWidget> inGameMenuClass;
-	TSubclassOf<class UUserWidget> inGameEscMenuClass;
-
 
 	IOnlineSessionPtr sessionInterface;
 	TSharedPtr<class FOnlineSessionSearch> sessionSearch;
