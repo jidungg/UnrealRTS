@@ -22,7 +22,8 @@ class TESTTOPDOWN_API IMenuInterface
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	virtual void Host() = 0;
-	virtual void Join(const FString& address) = 0;
+	virtual void OnHostButtonClicked(FString roomName) = 0;
+	virtual void OnJoinButtonClicked(uint32 idx) = 0;
+	virtual void OnJoinMenuButtonClicked() = 0;
 	virtual void GoToMainMenuLevel() =0;
 };
