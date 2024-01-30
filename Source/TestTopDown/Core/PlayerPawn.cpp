@@ -120,9 +120,8 @@ void APlayerPawn::CreateSelectionBox()
 void APlayerPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	//UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::Tick location: %s , rotation: %s"), *TargetLocation.ToString(), *TargetRotation.ToString());
 	CameraBounds();
-	//EdgeScroll();
+	EdgeScroll();
 
 	const FVector InterpolatedLocation = UKismetMathLibrary::VInterpTo(GetActorLocation(), TargetLocation, DeltaTime, Smoothing);
 	SetActorLocation(InterpolatedLocation);
@@ -133,7 +132,6 @@ void APlayerPawn::Tick(float DeltaTime)
 	const FRotator InterpolatedRotation = UKismetMathLibrary::RInterpTo(SpringArmComponent->GetRelativeRotation(), TargetRotation, DeltaTime, RotateSpeed);
 	SpringArmComponent->SetRelativeRotation(InterpolatedRotation);
 
-	//UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::Rotate Value: %s "), *InterpolatedRotation.ToString());
 }
 
 void APlayerPawn::CameraBounds()

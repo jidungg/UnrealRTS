@@ -15,25 +15,10 @@ class TESTTOPDOWN_API ARTSPlayerController : public APlayerController
 public:
 	ARTSPlayerController(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
-	UFUNCTION()
-	void Handle_Selection(AActor* ActorTOSelect);
-	void Handle_Selection(TArray<AActor*> ActorsTOSelect);
-
-	UFUNCTION()
-	void Handle_Deselection(AActor* ActorToDeselect);
-	void Handle_Deselection(TArray<AActor*> ActorsToDeselect);
-
-	UFUNCTION()
-	FVector GetMousePositionOnTerrain() const;
-
-	UFUNCTION()
-	FVector GetMousePositionOnSurface() const;
 protected:
 	virtual void BeginPlay() override;
 	virtual void PostInitializeComponents() override;
 	virtual void Tick(float DeltaTime) override;
-
 	UFUNCTION()
 	void UpdatePlacement() const;
 
@@ -47,23 +32,16 @@ protected:
 	void Server_Deselect(AActor* ActorToDeselect);
 	UFUNCTION(Server, Reliable)
 	void Server_Deselect_Group(const TArray<AActor*>& ActorsToDeSelect);
-
-
 	UFUNCTION()
 	void Local_Deselet_Group(const TArray<AActor*>& ActorsToDeselect);
-
-	UFUNCTION()
-	void ClearSelected();
 	UFUNCTION(Server, Reliable)
 	void Server_ClearSelected();
+
 	UFUNCTION()
 	void Local_DeSelectAll();
 
 	UFUNCTION(Server, Reliable)
-	void Server_Place(ESquad unitType, FTransform spawnTransform);
-	UFUNCTION(Server, Reliable)
-	void Server_SpawnBasicWorker();
-
+	void Server_Place(EBuildable buildingType, FTransform spawnTransform);
 	UFUNCTION(Client, Reliable)
 	void EndPlacement();
 
@@ -113,7 +91,30 @@ protected:
 
 public:
 	UFUNCTION()
+	void Handle_Selection(AActor* ActorTOSelect);
+	void Handle_Selection(TArray<AActor*> ActorsTOSelect);
+
+	UFUNCTION()
+	void Handle_Deselection(AActor* ActorToDeselect);
+	void Handle_Deselection(TArray<AActor*> ActorsToDeselect);
+
+	UFUNCTION()
+	FVector GetMousePositionOnTerrain() const;
+
+	UFUNCTION()
+	FVector GetMousePositionOnSurface() const;
+
+	UFUNCTION()
+	void ClearSelected();
+
+	UFUNCTION()
 	bool IsPlacementModeEnabled() const { return bPlacementModeEnabled; }
+
+	UFUNCTION(BlueprintCallable)
+	void BuildStart(EBuildable Type);
+
+	UFUNCTION()
+	void SetCurrentBuildable(EBuildable Type) { CurrentBuildableType = Type; };
 
 	UFUNCTION()
 	void SetPlacementMode(bool bNewMode);
@@ -121,16 +122,25 @@ public:
 	UFUNCTION()
 	bool SetPlacementPreview();
 
+
 	UFUNCTION()
 	void Place();
 
 	UFUNCTION()
-	void SpawnUnit(ESquad unitType, FTransform spawnTransform);
+	void SpawnBuilding(EBuildable buildingType, FTransform spawnTransform);
 
 	UFUNCTION()
 	void PlaceCancel();
 
 protected:
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Player Settings")
+		UDataAsset* PlayerActionsAsset;
+
+	/** FX Class that we will spawn when clicking */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+		class UNiagaraSystem* FXCursor;
+
+
 	class UMOBAGameInstance* GameInstance;
 	class AGridActor* Grid;
 	UPROPERTY(ReplicatedUsing = OnRep_Selected)
@@ -145,14 +155,9 @@ protected:
 	UPROPERTY()
 	AActor* PlacementPreviewActor;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Settings|Placeable")
-	TSubclassOf<AActor> PreviewActorType;
+	UPROPERTY()
+	EBuildable CurrentBuildableType;
 
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Player Settings")
-	UDataAsset* PlayerActionsAsset;
 
-	/** FX Class that we will spawn when clicking */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
-	class UNiagaraSystem* FXCursor;
 
 };

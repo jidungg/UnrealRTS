@@ -34,10 +34,10 @@ protected:
 	void GetTerrainPosition(FVector& TerrainPosition) const; 
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Settings|Camera")
-	float EdgeScrollSpeed = 30.0f;
+	float EdgeScrollSpeed = 50.0f;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Settings|Camera")
-	float MoveSpeed = 20.0f;
+	float MoveSpeed = 50.0f;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Settings|Camera")
 	float RotateSpeed = 5.0f;

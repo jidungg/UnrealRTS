@@ -13,6 +13,7 @@
 #include "../PlacementPreview.h"
 #include "../GridActor.h"
 #include "../BaseUnit.h"
+#include "../BaseBuilding.h"
 #include "../Selectable.h"
 #include "MOBAGameInstance.h"
 
@@ -36,26 +37,25 @@ void ARTSPlayerController::SetupInputComponent()
 void ARTSPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+
+	FInputModeGameAndUI InputMode;
+	InputMode.SetHideCursorDuringCapture(false);
+	SetInputMode(InputMode);
+	bShowMouseCursor = true;
+	bEnableClickEvents = true;
+	bEnableMouseOverEvents = true;
+
+	GameInstance = Cast<UMOBAGameInstance>(GetGameInstance());
+	if (GameInstance == nullptr) return;
+
 	if (IsLocalPlayerController())
 	{
-		FInputModeGameAndUI InputMode;
-		InputMode.SetHideCursorDuringCapture(false);
-		SetInputMode(InputMode);
-		bShowMouseCursor = true;
-		bEnableClickEvents = true;
-		bEnableMouseOverEvents = true;
-
-		GameInstance = Cast<UMOBAGameInstance>(GetGameInstance());
-		if (GameInstance == nullptr) return;
-
 		for (TActorIterator<AGridActor> It(GetWorld()); It; ++It)
 		{
 			Grid = (*It);
 			continue;
 		}
 		if (Grid == nullptr) return;
-
-		Server_SpawnBasicWorker();
 
 		SetPlacementMode(false);
 	}
@@ -66,14 +66,7 @@ void ARTSPlayerController::PostInitializeComponents()
 	Super::PostInitializeComponents();
 	
 }
-void ARTSPlayerController::Server_SpawnBasicWorker_Implementation()
-{
-	
-	/*auto PlayerStart = GameMode->ChoosePlayerStart(this);
-	if (PlayerStart == nullptr) return;
-	
-	SpawnUnit(RaceData->GetBasicWorker(GameInstance->Race), PlayerStart->GetActorTransform());*/
-}
+
 void ARTSPlayerController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -120,6 +113,12 @@ FVector ARTSPlayerController::GetMousePositionOnSurface() const
 }
 
 
+void ARTSPlayerController::BuildStart(EBuildable Type)
+{
+	SetCurrentBuildable(Type);
+	SetPlacementMode(true);
+}
+
 void ARTSPlayerController::SetPlacementMode(bool bNewMode)
 {
 	if (bPlacementModeEnabled == bNewMode)
@@ -146,15 +145,20 @@ bool ARTSPlayerController::SetPlacementPreview()
 {
 	if (bPlacementModeEnabled == true)
 		return false;
-	if (PreviewActorType == nullptr)
+
+	if (CurrentBuildableType == EBuildable::None)
+		return false;
+	auto BuildableClass = GameInstance->GetBuildableBP(CurrentBuildableType);
+	if (BuildableClass == nullptr)
 		return false;
 
 	FTransform SpawnTransform;
-	SpawnTransform.SetLocation(GetMousePositionOnSurface());
+	FVector Location = GetMousePositionOnSurface();
+	SpawnTransform.SetLocation(FVector(Location.X, Location.Y, Location.Z - 15.f));
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	PlacementPreviewActor = GetWorld()->SpawnActor<APlacementPreview>(PreviewActorType, SpawnTransform, SpawnParams);
+	PlacementPreviewActor = GetWorld()->SpawnActor<ABaseBuilding>(BuildableClass, SpawnTransform, SpawnParams);
 
 	if (PlacementPreviewActor == nullptr)
 		return false;
@@ -174,12 +178,13 @@ void ARTSPlayerController::SetInputPlacement(const bool Enable) const
 		if (Enable)
 		{
 			AddInputMapping(PlayerActions->MappingContextPlacement, PlayerActions->MapPriorityPlacement);
-			SetInputDefault(!Enable);
+			//SetInputDefault(!Enable);
+
 		}
 		else
 		{
 			RemoveInputMapping(PlayerActions->MappingContextPlacement);
-			SetInputDefault();
+			//SetInputDefault();
 		}
 	}
 }
@@ -199,33 +204,31 @@ void ARTSPlayerController::Place()
 {
 	if (!IsPlacementModeEnabled() || !PlacementPreviewActor)
 		return;
-	Server_Place(ESquad::Fox, PlacementPreviewActor->GetActorTransform());
+	if (CurrentBuildableType == EBuildable::None)
+		return;
+	Server_Place(CurrentBuildableType, PlacementPreviewActor->GetActorTransform());
 	SetPlacementMode(false);
 }
 
-void ARTSPlayerController::Server_Place_Implementation(ESquad unitType, FTransform spawnTransform)
+void ARTSPlayerController::Server_Place_Implementation(EBuildable buildingType, FTransform spawnTransform)
 {
-	SpawnUnit(unitType, spawnTransform);
+	SpawnBuilding(buildingType, spawnTransform);
+
 }
-void ARTSPlayerController::SpawnUnit(ESquad unitType, FTransform spawnTransform)
+void ARTSPlayerController::SpawnBuilding(EBuildable buildingType, FTransform spawnTransform)
 {
 	if (GameInstance == nullptr)return;
 
-	TSubclassOf<class ABaseUnit> UnitClass = GameInstance->GetSquadBP(unitType);
-	if (UnitClass == nullptr)return;
+	TSubclassOf<ABaseBuilding> BuildingClass = GameInstance->GetBuildableBP(buildingType);
+	if (BuildingClass == nullptr)return;
 
 	FTransform SpawnTransfrom;
 	FVector Location = spawnTransform.GetLocation();
-	SpawnTransfrom.SetLocation(FVector(Location.X, Location.Y, Location.Z + 100.f));
+	SpawnTransfrom.SetLocation(FVector(Location.X, Location.Y, Location.Z - 15.f));
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	ABaseUnit* NewUnit = GetWorld()->SpawnActor<ABaseUnit>(UnitClass, SpawnTransfrom, SpawnParams);
-
-	if (NewUnit != nullptr)
-	{
-		NewUnit->SetOwner(this);
-	}
+	ABaseBuilding* NewBuilding = GetWorld()->SpawnActor<ABaseBuilding>(BuildingClass, SpawnTransfrom, SpawnParams);
 	
 }
 
