@@ -16,11 +16,13 @@ public:
 	ARTSPlayerController(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 protected:
+	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void BeginPlay() override;
 	virtual void PostInitializeComponents() override;
 	virtual void Tick(float DeltaTime) override;
+
 	UFUNCTION()
-	void UpdatePlacement() const;
+	void UpdatePlacement();
 
 	UFUNCTION()
 	bool IsActorSelected(AActor* ActorToCheck) const;
@@ -40,10 +42,7 @@ protected:
 	UFUNCTION()
 	void Local_DeSelectAll();
 
-	UFUNCTION(Server, Reliable)
-	void Server_Place(EBuildable buildingType, FTransform spawnTransform);
-	UFUNCTION(Client, Reliable)
-	void EndPlacement();
+
 
 	UFUNCTION()
 	void OnRep_Selected();
@@ -102,35 +101,13 @@ public:
 	FVector GetMousePositionOnTerrain() const;
 
 	UFUNCTION()
-	FVector GetMousePositionOnSurface() const;
+	FVector GetMousePositionOnSurface(ECollisionChannel Channel) const;
 
 	UFUNCTION()
 	void ClearSelected();
 
-	UFUNCTION()
-	bool IsPlacementModeEnabled() const { return bPlacementModeEnabled; }
+	
 
-	UFUNCTION(BlueprintCallable)
-	void BuildStart(EBuildable Type);
-
-	UFUNCTION()
-	void SetCurrentBuildable(EBuildable Type) { CurrentBuildableType = Type; };
-
-	UFUNCTION()
-	void SetPlacementMode(bool bNewMode);
-
-	UFUNCTION()
-	bool SetPlacementPreview();
-
-
-	UFUNCTION()
-	void Place();
-
-	UFUNCTION()
-	void SpawnBuilding(EBuildable buildingType, FTransform spawnTransform);
-
-	UFUNCTION()
-	void PlaceCancel();
 
 protected:
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Player Settings")
@@ -140,23 +117,88 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 		class UNiagaraSystem* FXCursor;
 
-
-	class UMOBAGameInstance* GameInstance;
-	class AGridActor* Grid;
 	UPROPERTY(ReplicatedUsing = OnRep_Selected)
 	TArray<AActor*> Selected;
 
 	UPROPERTY()
 	FSelectedUpdatedDelegate OnSelectedUpdated;
 
-	UPROPERTY()
+
+	// BUILDER ===================================
+protected:
+	UFUNCTION(Server, Reliable)
+		void Server_Place(EBuildable buildingType, FTransform spawnTransform);
+	UFUNCTION(Client, Reliable)
+		void EndPlacement();
+
+public:
+	UFUNCTION()
+		bool IsPlacementModeEnabled() const { return bPlacementModeEnabled; }
+
+	UFUNCTION(BlueprintImplementableEvent)
+		void OnBuildButton();
+	UFUNCTION(BlueprintImplementableEvent)
+		void OnBuildBackButton();
+
+	UFUNCTION(BlueprintCallable)
+		void BuildableSelected(EBuildable Type);
+
+	UFUNCTION()
+		void SetCurrentBuildable(EBuildable Type) { CurrentBuildableType = Type; };
+
+	UFUNCTION(BlueprintCallable)
+		void SetPlacementMode(bool bNewMode);
+
+	UFUNCTION()
+		bool SetPlacementPreview();
+
+	UFUNCTION()
+		void Place();
+
+	UFUNCTION()
+		void SpawnBuilding(EBuildable buildingType, FTransform spawnTransform);
+
+	UFUNCTION()
+		void PlaceCancel();
+
+	UFUNCTION()
+		void SetPreviewPossible(bool isPossible);
+
+protected:
+	class UMOBAGameInstance* GameInstance;
+
+	class ABuildGridActor* Grid;
+
+	UPROPERTY(BlueprintReadWrite)
 	bool bPlacementModeEnabled;
 
 	UPROPERTY()
-	AActor* PlacementPreviewActor;
+	class ABaseBuilding* BuildPreviewActor;
+
+	UStaticMeshComponent* BuildPreviewStaticMeshComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UMaterial* BuildPreviewBaseMaterial;
+
+	UPROPERTY(EditAnywhere)
+	class UMaterialInstanceDynamic* BuildPossibleMaterial;
+
+	UPROPERTY(EditAnywhere)
+	class UMaterialInstanceDynamic* BuildImpossibleMateria;
 
 	UPROPERTY()
-	EBuildable CurrentBuildableType;
+		EBuildable CurrentBuildableType;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BuildPreview")
+		float BuildPreviewOpacity = 0.5;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BuildPreview")
+		FColor BuildPossibleColor = FColor::Green;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BuildPreview")
+		FColor BuildImpossibleColor = FColor::Red;
+
+
 
 
 

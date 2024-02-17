@@ -244,17 +244,31 @@ void APlayerPawn::Zoom(const FInputActionValue& Value)
 }
 void APlayerPawn::OnTestPlacement(const FInputActionValue& Value)
 {
-	TestPlacement();
+	if (RTSPlayerController == nullptr)
+		return;
+	if (RTSPlayerController->IsPlacementModeEnabled() == true)
+		RTSPlayerController->OnBuildBackButton();
+	else
+		RTSPlayerController->OnBuildButton();
 
 }
 
 void APlayerPawn::OnPlace(const FInputActionValue& Value)
 {
-	Place();
+	if (RTSPlayerController == nullptr)
+		return;
+
+	if (RTSPlayerController->IsPlacementModeEnabled())
+	{
+		RTSPlayerController->Place();
+	}
 }
 void APlayerPawn::OnPlaceCancel(const FInputActionValue& Value)
 {
-	PlaceCancel();
+	if (RTSPlayerController == nullptr)
+		return;
+
+	RTSPlayerController->SetPlacementMode(false);
 }
 
 
@@ -519,30 +533,5 @@ void APlayerPawn::CtrlCommand(const FInputActionValue& Value)
 	RTSPlayerController->CommandSelected(CreateCommandData(ECommandType::CommandMoveAttack));
 }
 
-void APlayerPawn::TestPlacement()
-{
-	if (RTSPlayerController == nullptr)
-		return;
-	RTSPlayerController->SetPlacementMode(true);
-}
-
-void APlayerPawn::Place()
-{
-	if (RTSPlayerController == nullptr)
-		return;
-
-	if (RTSPlayerController->IsPlacementModeEnabled())
-	{
-		RTSPlayerController->Place();
-	}
-}
-
-void APlayerPawn::PlaceCancel()
-{
-	if (RTSPlayerController == nullptr)
-		return;
-
-	RTSPlayerController->SetPlacementMode(false);
-}
 
 

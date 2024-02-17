@@ -17,6 +17,8 @@ AGridActor::AGridActor()
 void AGridActor::BeginPlay()
 {
 	Super::BeginPlay();
+
+	DrawGrid();
 	SetVisibility(false);
 }
 
@@ -25,8 +27,6 @@ void AGridActor::OnConstruction(const FTransform& Transform)
 	Super::OnConstruction(Transform);
 	LineMaterialInstance = CreateMaterialInstance(LineColor, LineOpacity);
 	SelectionMaterialInstance = CreateMaterialInstance(SelectionColor, SelectionOpacity);
-
-	DrawGrid();
 
 }
 UMaterialInstanceDynamic* AGridActor::CreateMaterialInstance(FLinearColor Color, float Opacity)
@@ -82,6 +82,7 @@ void AGridActor::CreateLines()
 
 	LineProceduralMeshComponent->CreateMeshSection(0, LineVertices, LineTriangles, TArray<FVector>(), TArray<FVector2D>(), TArray<FColor>(), TArray<FProcMeshTangent>(), false);
 	LineProceduralMeshComponent->SetMaterial(0, LineMaterialInstance);
+	
 }
 void AGridActor::CreateSelectionTile()
 {
@@ -122,24 +123,27 @@ void AGridActor::Tick(float DeltaTime)
 }
 
 
-std::pair<int32, int32> AGridActor::LocationToTile(FVector Location)
+std::pair<int32, int32> AGridActor::LocationToTile(FVector Location, bool Binded)
 {
 	FVector Offset = Location - GetActorLocation();
 	int32 Row = FMath::FloorToInt32( Offset.X / GridWidth() * NumRows);
 	int32 Col = FMath::FloorToInt32(Offset.Y / GridHeight() * NumColumns);
 
-	
-	if (IsTileValid(Row, Col) == false)
+	if (Binded)
 	{
-		if (Row >= NumRows)
-			Row = NumRows - 1;
-		else if (Row < 0)
-			Row = 0;
-		if (Col >= NumColumns)
-			Col = NumColumns - 1;
-		else if (Col < 0)
-			Col = 0;	
+		if (IsTileValid(Row, Col) == false)
+		{
+			if (Row >= NumRows)
+				Row = NumRows - 1;
+			else if (Row < 0)
+				Row = 0;
+			if (Col >= NumColumns)
+				Col = NumColumns - 1;
+			else if (Col < 0)
+				Col = 0;
+		}
 	}
+
 
 	return std::make_pair(Row, Col);
 }
@@ -193,6 +197,7 @@ bool AGridActor::IsTileValid(int32 Row, int32 Col)
 	return true;
 }
 
+
 void AGridActor::SetVisibility(bool Active)
 {
 	SetLineVisibility(Active);
@@ -208,3 +213,5 @@ void AGridActor::SetSelectionVisibility(bool Active)
 {
 	SelectionProceduralMeshComponent->SetVisibility(Active);
 }
+
+

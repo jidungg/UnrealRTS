@@ -179,12 +179,5 @@ protected://Mouse input
 	void CtrlCommand(const FInputActionValue& Value);
 
 public:
-	UFUNCTION()
-	void TestPlacement();
 
-	UFUNCTION()
-	void Place();
-
-	UFUNCTION()
-	void PlaceCancel();
 };

@@ -59,8 +59,10 @@ protected:
 	TArray<FVector> SelectionVertices;
 	TArray<int32> SelectionTriangles;
 
+
+
 public:
-	std::pair<int32, int32> LocationToTile(FVector Location);
+	std::pair<int32, int32> LocationToTile(FVector Location,bool Binded = true);
 	FVector TileToGridLocation(int32 Row, int32 Col, bool Center);
 	void SetSelectedTile(int32 Row, int32 Col);
 	bool IsTileValid(int32 Row, int32 Col);
@@ -68,6 +70,7 @@ public:
 	void SetVisibility(bool Active);
 	void SetLineVisibility(bool Active);
 	void SetSelectionVisibility(bool Active);
+
 private:
 	void DrawGrid();
 	void ClearGrid();
@@ -78,4 +81,5 @@ private:
 	float GridHeight(){ return NumRows * TileSize; }
 	class UMaterialInstanceDynamic* CreateMaterialInstance(FLinearColor Color, float Opacity);
 	std::pair<int32, int32> GetNearTile(FVector Location);
+
 };

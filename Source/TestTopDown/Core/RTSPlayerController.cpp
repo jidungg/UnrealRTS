@@ -11,7 +11,7 @@
 #include "../Data/PlayerInputActions.h"
 #include "../Data/DataHeader.h"
 #include "../PlacementPreview.h"
-#include "../GridActor.h"
+#include "../BuildGridActor.h"
 #include "../BaseUnit.h"
 #include "../BaseBuilding.h"
 #include "../Selectable.h"
@@ -21,6 +21,8 @@
 ARTSPlayerController::ARTSPlayerController(const FObjectInitializer& ObjectInitializer)
 {
 	bPlacementModeEnabled = false;
+
+
 }
 
 void ARTSPlayerController::SetupInputComponent()
@@ -32,6 +34,18 @@ void ARTSPlayerController::SetupInputComponent()
 		InputSubsystem->ClearAllMappings();
 		SetInputDefault();
 	}
+}
+
+void ARTSPlayerController::OnConstruction(const FTransform& Transform)
+{
+	Super::OnConstruction(Transform);	
+	BuildPossibleMaterial = UMaterialInstanceDynamic::Create(BuildPreviewBaseMaterial, nullptr);
+	BuildPossibleMaterial->SetVectorParameterValue(TEXT("Color"), FVector(BuildPossibleColor.R, BuildPossibleColor.G, BuildPossibleColor.B));
+	BuildPossibleMaterial->SetScalarParameterValue(TEXT("Opacity"), BuildPreviewOpacity);
+	BuildImpossibleMateria = UMaterialInstanceDynamic::Create(BuildPreviewBaseMaterial, nullptr);
+	BuildImpossibleMateria->SetVectorParameterValue(TEXT("Color"), FVector(BuildImpossibleColor.R, BuildImpossibleColor.G, BuildImpossibleColor.B));
+	BuildImpossibleMateria->SetScalarParameterValue(TEXT("Opacity"), BuildPreviewOpacity);
+
 }
 
 void ARTSPlayerController::BeginPlay()
@@ -50,7 +64,7 @@ void ARTSPlayerController::BeginPlay()
 
 	if (IsLocalPlayerController())
 	{
-		for (TActorIterator<AGridActor> It(GetWorld()); It; ++It)
+		for (TActorIterator<ABuildGridActor> It(GetWorld()); It; ++It)
 		{
 			Grid = (*It);
 			continue;
@@ -71,29 +85,38 @@ void ARTSPlayerController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (bPlacementModeEnabled && PlacementPreviewActor != nullptr)
+	if (bPlacementModeEnabled && BuildPreviewActor != nullptr)
 	{
 		UpdatePlacement();
 	}
 }
 
-void ARTSPlayerController::UpdatePlacement() const
+void ARTSPlayerController::UpdatePlacement()
 {
-	if (PlacementPreviewActor == nullptr)
+	if (BuildPreviewActor == nullptr)
 		return;
 	if (Grid == nullptr)
 		return;
 
-	std::pair<int32, int32> Tile = Grid->LocationToTile(GetMousePositionOnSurface());
-	if (Grid->IsTileValid(Tile.first, Tile.second) == false)
+	std::pair<int32, int32> SelectedTile = Grid->LocationToTile(GetMousePositionOnTerrain());
+	if (Grid->IsTileValid(SelectedTile.first, SelectedTile.second) == false)
 		return;
+	Grid->SetSelectedTile(SelectedTile.first, SelectedTile.second);
 
-	FVector TileLocation = Grid->TileToGridLocation(Tile.first, Tile.second, true);
-	Grid->SetSelectedTile(Tile.first, Tile.second);
-	PlacementPreviewActor->SetActorLocation(TileLocation);
+	FVector TileLocation = Grid->TileToGridLocation(SelectedTile.first, SelectedTile.second, false);
+	BuildPreviewActor->SetActorLocation(TileLocation);
+	if (Grid->CheckBuildable(BuildPreviewActor) == true)
+	{
+		SetPreviewPossible(true);
+		
+	}
+	else
+	{
+		SetPreviewPossible(false);
+	}
 }
 
-FVector ARTSPlayerController::GetMousePositionOnSurface() const
+FVector ARTSPlayerController::GetMousePositionOnSurface(ECollisionChannel Channel) const
 {
 	FVector WorldLocation, WorldDirection;
 	DeprojectMousePositionToWorld(WorldLocation, WorldDirection);
@@ -101,8 +124,9 @@ FVector ARTSPlayerController::GetMousePositionOnSurface() const
 
 	UWorld* World = GetWorld();
 	if (World == nullptr)return FVector::ZeroVector;
+ 
 
-	if (World->LineTraceSingleByChannel(OutHit, WorldLocation, WorldLocation + (WorldDirection * 100000.f), ECollisionChannel::ECC_Visibility))
+	if (World->LineTraceSingleByChannel(OutHit, WorldLocation, WorldLocation + (WorldDirection * 100000.f), Channel))
 	{
 		if (OutHit.bBlockingHit)
 		{
@@ -113,12 +137,6 @@ FVector ARTSPlayerController::GetMousePositionOnSurface() const
 }
 
 
-void ARTSPlayerController::BuildStart(EBuildable Type)
-{
-	SetCurrentBuildable(Type);
-	SetPlacementMode(true);
-}
-
 void ARTSPlayerController::SetPlacementMode(bool bNewMode)
 {
 	if (bPlacementModeEnabled == bNewMode)
@@ -126,12 +144,7 @@ void ARTSPlayerController::SetPlacementMode(bool bNewMode)
 	if (Grid == nullptr)
 		return;
 
-	if (bNewMode == true) 
-	{
-		if (SetPlacementPreview() == false)
-			return;
-	}
-	else if(bNewMode == false)
+	if (bNewMode == false)
 	{
 		EndPlacement();
 	}
@@ -140,35 +153,6 @@ void ARTSPlayerController::SetPlacementMode(bool bNewMode)
 	SetInputPlacement(bNewMode);
 	Grid->SetVisibility(bNewMode);
 	bPlacementModeEnabled = bNewMode;
-}
-bool ARTSPlayerController::SetPlacementPreview()
-{
-	if (bPlacementModeEnabled == true)
-		return false;
-
-	if (CurrentBuildableType == EBuildable::None)
-		return false;
-	auto BuildableClass = GameInstance->GetBuildableBP(CurrentBuildableType);
-	if (BuildableClass == nullptr)
-		return false;
-
-	FTransform SpawnTransform;
-	FVector Location = GetMousePositionOnSurface();
-	SpawnTransform.SetLocation(FVector(Location.X, Location.Y, Location.Z - 15.f));
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-	PlacementPreviewActor = GetWorld()->SpawnActor<ABaseBuilding>(BuildableClass, SpawnTransform, SpawnParams);
-
-	if (PlacementPreviewActor == nullptr)
-		return false;
-
-	return true;
-
-}
-void ARTSPlayerController::EndPlacement_Implementation()
-{
-	PlacementPreviewActor->Destroy();
 }
 void ARTSPlayerController::SetInputPlacement(const bool Enable) const
 {
@@ -188,26 +172,87 @@ void ARTSPlayerController::SetInputPlacement(const bool Enable) const
 		}
 	}
 }
+void ARTSPlayerController::BuildableSelected(EBuildable Type)
+{
+	if (bPlacementModeEnabled == false)
+		return;
+
+	SetCurrentBuildable(Type);
+	SetPlacementPreview();
+}
+
+bool ARTSPlayerController::SetPlacementPreview()
+{
+	if (CurrentBuildableType == EBuildable::None)
+		return false;
+	auto BuildableClass = GameInstance->GetBuildableBP(CurrentBuildableType);
+	auto BuildablePreviewSM = GameInstance->GetBuildablePreviewSM(CurrentBuildableType);
+	if (BuildableClass == nullptr)
+		return false;
+	if (BuildablePreviewSM == nullptr)
+		return false;
+	if (BuildPreviewActor != nullptr)
+		BuildPreviewActor->Destroy();
+
+	FTransform SpawnTransform;
+	FVector Location = GetMousePositionOnTerrain();
+	SpawnTransform.SetLocation(FVector(Location.X, Location.Y, Location.Z - 15.f));
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	BuildPreviewActor = GetWorld()->SpawnActor<ABaseBuilding>(BuildableClass, SpawnTransform, SpawnParams);
+	if (BuildPreviewActor == nullptr)
+		return false; 
+	
+	BuildPreviewStaticMeshComponent = BuildPreviewActor->FindComponentByClass<UStaticMeshComponent>();
+	BuildPreviewStaticMeshComponent->SetStaticMesh(BuildablePreviewSM);
+	SetPreviewPossible(true);
+	return true;
+}
+void ARTSPlayerController::SetPreviewPossible(bool isPossible)
+{
+	if (BuildPreviewStaticMeshComponent == nullptr)
+		return ;
+
+	auto Material = isPossible ? BuildPossibleMaterial : BuildImpossibleMateria;
+	int MaterialCount = BuildPreviewStaticMeshComponent->GetNumMaterials();
+
+	for (int i = 0; i < MaterialCount; i++)
+	{
+		BuildPreviewStaticMeshComponent->SetMaterial(i, Material);
+	}
+}
+
+
+void ARTSPlayerController::EndPlacement_Implementation()
+{
+	if (BuildPreviewActor != nullptr)
+		BuildPreviewActor->Destroy();
+}
+
 
 void ARTSPlayerController::PlaceCancel()
 {
 	if (bPlacementModeEnabled == false)
 		return;
-	if (PlacementPreviewActor == nullptr)
+	if (BuildPreviewActor == nullptr)
 		return;
 
 	bPlacementModeEnabled = false;
 
 
 }
+
 void ARTSPlayerController::Place()
 {
-	if (!IsPlacementModeEnabled() || !PlacementPreviewActor)
+	if (!IsPlacementModeEnabled() || !BuildPreviewActor)
 		return;
 	if (CurrentBuildableType == EBuildable::None)
 		return;
-	Server_Place(CurrentBuildableType, PlacementPreviewActor->GetActorTransform());
-	SetPlacementMode(false);
+	if (Grid->Build(BuildPreviewActor) == false)
+		return;
+	Server_Place(CurrentBuildableType, BuildPreviewActor->GetActorTransform());
+
 }
 
 void ARTSPlayerController::Server_Place_Implementation(EBuildable buildingType, FTransform spawnTransform)
@@ -224,12 +269,13 @@ void ARTSPlayerController::SpawnBuilding(EBuildable buildingType, FTransform spa
 
 	FTransform SpawnTransfrom;
 	FVector Location = spawnTransform.GetLocation();
-	SpawnTransfrom.SetLocation(FVector(Location.X, Location.Y, Location.Z - 15.f));
+	SpawnTransfrom.SetLocation(FVector(Location.X, Location.Y, 0));
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 	ABaseBuilding* NewBuilding = GetWorld()->SpawnActor<ABaseBuilding>(BuildingClass, SpawnTransfrom, SpawnParams);
-	
+	if(NewBuilding)
+		NewBuilding->SetOwner(this);
 }
 
 
@@ -539,6 +585,10 @@ void ARTSPlayerController::Server_ClearSelected_Implementation()
 	Selected.Empty();
 	OnRep_Selected();
 }
+void ARTSPlayerController::OnRep_Selected()
+{
+	OnSelectedUpdated.Broadcast();
+}
 
 
 FVector ARTSPlayerController::GetMousePositionOnTerrain() const
@@ -572,8 +622,4 @@ bool ARTSPlayerController::IsActorSelected(AActor* ActorToCheck) const
 	return false;
 }
 
-void ARTSPlayerController::OnRep_Selected()
-{
-	OnSelectedUpdated.Broadcast();
-}
 

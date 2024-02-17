@@ -381,6 +381,16 @@ TSubclassOf<ABaseBuilding> UMOBAGameInstance::GetBuildableBP(EBuildable Type)
 	return BuildableDataAsset->BuildableMap[Type].BPClass;
 }
 
+UStaticMesh* UMOBAGameInstance::GetBuildablePreviewSM(EBuildable Type)
+{
+	if (BuildableDataAsset == nullptr)
+		return nullptr;
+	if (BuildableDataAsset->BuildableMap.Contains(Type) == false)
+		return nullptr;
+
+	return BuildableDataAsset->BuildableMap[Type].BuildPreviewSM;
+}
+
 bool UMOBAGameInstance::GetBuildableDataRow(EBuildable Type, UPARAM(ref) FBuildableDataRow& DataRow)
 {
 	if (BuildableDataAsset == nullptr)

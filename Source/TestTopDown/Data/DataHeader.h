@@ -60,10 +60,16 @@ public:
         TSubclassOf<class ABaseBuilding> BPClass;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
+        UStaticMesh* BuildPreviewSM;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
         TSoftObjectPtr<UTexture2D> UIIcon;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
         TMap<ESquad, int32> SummonSquad;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+        int32 Size;
 };
 
 UENUM(BlueprintType)

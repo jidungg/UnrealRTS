@@ -75,6 +75,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	TSubclassOf<class ABaseBuilding> GetBuildableBP(EBuildable Type);
 	UFUNCTION(BlueprintCallable)
+	UStaticMesh*  GetBuildablePreviewSM(EBuildable Type);
+	UFUNCTION(BlueprintCallable)
 	bool GetBuildableDataRow(EBuildable Type, UPARAM(ref) FBuildableDataRow& DataRow);
 	UFUNCTION(BlueprintCallable)
 	ESquad GetBasicWorker(ERace Type);
