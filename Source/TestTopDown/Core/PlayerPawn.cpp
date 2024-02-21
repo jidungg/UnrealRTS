@@ -58,12 +58,11 @@ void APlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 		EPlayerInputActions::BindInput_TriggerOnly(Input, PlayerActions->Zoom, this, &APlayerPawn::Zoom);
 		EPlayerInputActions::BindInput_TriggerOnly(Input, PlayerActions->Rotate, this, &APlayerPawn::Rotate);
 		EPlayerInputActions::BindInput_StartTriggerComplete(Input, PlayerActions->Select, this, &APlayerPawn::Select, &APlayerPawn::SelectHold, &APlayerPawn::SelectEnd);
-		EPlayerInputActions::BindInput_TriggerOnly(Input, PlayerActions->TestPlacement, this, &APlayerPawn::OnTestPlacement);
 		EPlayerInputActions::BindInput_TriggerOnly(Input, PlayerActions->SelectDoubleTap, this, &APlayerPawn::SelectDoubleTap);
 		EPlayerInputActions::BindInput_Simple(Input, PlayerActions->Command, this, &APlayerPawn::CommandStart, &APlayerPawn::Command);
 
+
 		EPlayerInputActions::BindInput_TriggerOnly(Input, PlayerActions->Place, this, &APlayerPawn::OnPlace);
-		EPlayerInputActions::BindInput_TriggerOnly(Input, PlayerActions->PlaceCancel, this, &APlayerPawn::OnPlaceCancel);
 
 		EPlayerInputActions::BindInput_Simple(Input, PlayerActions->Shift, this, &APlayerPawn::Shift, &APlayerPawn::Shift);
 		EPlayerInputActions::BindInput_Simple(Input, PlayerActions->ShiftSelect, this, &APlayerPawn::ShiftSelect, &APlayerPawn::ShiftSelectEnd);
@@ -89,6 +88,7 @@ void APlayerPawn::BeginPlay()
 	const FRotator Rotation = SpringArmComponent->GetRelativeRotation();
 	TargetRotation = FRotator(Rotation.Pitch - 50, Rotation.Yaw, 0.0f);
 	RTSPlayerController = Cast<ARTSPlayerController>(Controller);
+	MOBAGameInstance = Cast<UMOBAGameInstance>(GetGameInstance());
 	CreateSelectionBox();
 }
 
@@ -242,34 +242,19 @@ void APlayerPawn::Zoom(const FInputActionValue& Value)
 		TargetZoom = FMath::Clamp(TargetZoom + (Value.Get<float>() * ZoomSpeed), MinZoom, MaxZoom);
 	}
 }
-void APlayerPawn::OnTestPlacement(const FInputActionValue& Value)
-{
-	if (RTSPlayerController == nullptr)
-		return;
-	if (RTSPlayerController->IsPlacementModeEnabled() == true)
-		RTSPlayerController->OnBuildBackButton();
-	else
-		RTSPlayerController->OnBuildButton();
 
-}
 
 void APlayerPawn::OnPlace(const FInputActionValue& Value)
 {
 	if (RTSPlayerController == nullptr)
 		return;
 
-	if (RTSPlayerController->IsPlacementModeEnabled())
+	if (RTSPlayerController->IsPlacementModeEnabled() == true)
 	{
 		RTSPlayerController->Place();
 	}
 }
-void APlayerPawn::OnPlaceCancel(const FInputActionValue& Value)
-{
-	if (RTSPlayerController == nullptr)
-		return;
 
-	RTSPlayerController->SetPlacementMode(false);
-}
 
 
 void APlayerPawn::Select(const FInputActionValue& Value)
@@ -343,7 +328,7 @@ void APlayerPawn::SelectDoubleTap(const FInputActionValue& Value)
 {
 	if (RTSPlayerController == nullptr)
 		return;
-	UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::SelectDoubleTap"));
+
 	if (AActor* Selection = GetSelectedObject())
 	{
 
@@ -360,7 +345,6 @@ void APlayerPawn::CommandStart(const FInputActionValue& Value)
 {
 	if (RTSPlayerController == nullptr)
 		return;
-	UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::CommandStart"));
 	CommandLocation = RTSPlayerController->GetMousePositionOnTerrain();
 }
 
@@ -368,9 +352,9 @@ void APlayerPawn::Command(const FInputActionValue& Value)
 {
 	if (RTSPlayerController == nullptr)
 		return;
-	UE_LOG(LogTemp, Warning, TEXT("APlayerPawn::Command"));
 	RTSPlayerController->CommandSelected(CreateCommandData(ECommandType::CommandMove));
 }
+
 FCommandData APlayerPawn::CreateCommandData(const ECommandType Type) const
 {
 	if (RTSPlayerController == nullptr)

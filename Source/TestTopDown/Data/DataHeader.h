@@ -60,7 +60,7 @@ public:
         TSubclassOf<class ABaseBuilding> BPClass;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-        UStaticMesh* BuildPreviewSM;
+        TSubclassOf<class ABaseBuilding> BuildPreviewBP;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
         TSoftObjectPtr<UTexture2D> UIIcon;

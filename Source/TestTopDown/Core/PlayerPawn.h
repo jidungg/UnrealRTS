@@ -90,6 +90,9 @@ protected://Mouse input
 	UPROPERTY()
 	class ARTSPlayerController* RTSPlayerController;
 
+	UPROPERTY()
+	class UMOBAGameInstance* MOBAGameInstance;
+
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Settings|Mouse")
 	TSubclassOf<class ASelectionBox> SelectionBoxClass;
 
@@ -131,14 +134,10 @@ protected://Mouse input
 	UFUNCTION()
 	void SelectDoubleTap(const FInputActionValue& Value);
 
-	UFUNCTION()
-	void OnTestPlacement(const FInputActionValue& Value);
 
 	UFUNCTION()
 	void OnPlace(const FInputActionValue& Value);
 
-	UFUNCTION()
-	void OnPlaceCancel(const FInputActionValue& Value);
 
 	UFUNCTION()
 	FCommandData CreateCommandData(const ECommandType Type) const;

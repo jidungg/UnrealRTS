@@ -105,15 +105,14 @@ void ARTSPlayerController::UpdatePlacement()
 
 	FVector TileLocation = Grid->TileToGridLocation(SelectedTile.first, SelectedTile.second, false);
 	BuildPreviewActor->SetActorLocation(TileLocation);
-	if (Grid->CheckBuildable(BuildPreviewActor) == true)
+	bool bBuildPossible = Grid->CheckBuildable(BuildPreviewActor);
+	if (bIsBuildPossibleBefore != bBuildPossible)
 	{
-		SetPreviewPossible(true);
+		SetPreviewPossible(bBuildPossible);
 		
 	}
-	else
-	{
-		SetPreviewPossible(false);
-	}
+
+	bIsBuildPossibleBefore = bBuildPossible;
 }
 
 FVector ARTSPlayerController::GetMousePositionOnSurface(ECollisionChannel Channel) const
@@ -185,11 +184,8 @@ bool ARTSPlayerController::SetPlacementPreview()
 {
 	if (CurrentBuildableType == EBuildable::None)
 		return false;
-	auto BuildableClass = GameInstance->GetBuildableBP(CurrentBuildableType);
-	auto BuildablePreviewSM = GameInstance->GetBuildablePreviewSM(CurrentBuildableType);
-	if (BuildableClass == nullptr)
-		return false;
-	if (BuildablePreviewSM == nullptr)
+	auto BuildablePreview = GameInstance->GetBuildPreviewBP(CurrentBuildableType);
+	if (BuildablePreview == nullptr)
 		return false;
 	if (BuildPreviewActor != nullptr)
 		BuildPreviewActor->Destroy();
@@ -200,19 +196,18 @@ bool ARTSPlayerController::SetPlacementPreview()
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	BuildPreviewActor = GetWorld()->SpawnActor<ABaseBuilding>(BuildableClass, SpawnTransform, SpawnParams);
+	BuildPreviewActor = GetWorld()->SpawnActor<ABaseBuilding>(BuildablePreview, SpawnTransform, SpawnParams);
 	if (BuildPreviewActor == nullptr)
 		return false; 
-	
 	BuildPreviewStaticMeshComponent = BuildPreviewActor->FindComponentByClass<UStaticMeshComponent>();
-	BuildPreviewStaticMeshComponent->SetStaticMesh(BuildablePreviewSM);
 	SetPreviewPossible(true);
 	return true;
 }
 void ARTSPlayerController::SetPreviewPossible(bool isPossible)
 {
-	if (BuildPreviewStaticMeshComponent == nullptr)
-		return ;
+	ensure(BuildPossibleMaterial != nullptr);
+	ensure(BuildImpossibleMateria != nullptr);
+	ensure(BuildPreviewStaticMeshComponent != nullptr);
 
 	auto Material = isPossible ? BuildPossibleMaterial : BuildImpossibleMateria;
 	int MaterialCount = BuildPreviewStaticMeshComponent->GetNumMaterials();
@@ -224,7 +219,7 @@ void ARTSPlayerController::SetPreviewPossible(bool isPossible)
 }
 
 
-void ARTSPlayerController::EndPlacement_Implementation()
+void ARTSPlayerController::EndPlacement()
 {
 	if (BuildPreviewActor != nullptr)
 		BuildPreviewActor->Destroy();

@@ -28,6 +28,8 @@ public://Main menu Blueprint callables
 	UFUNCTION(BlueprintCallable)
 	void LoadMainMenu();
 
+	UFUNCTION(BlueprintImplementableEvent)
+		void OnESCButton();
 
 public://Menu Interface overrides
 	UFUNCTION()
@@ -36,7 +38,7 @@ public://Menu Interface overrides
 	virtual void OnJoinButtonClicked(uint32 idx) override;
 	UFUNCTION()
 	virtual void OnJoinMenuButtonClicked() override;
-	UFUNCTION(Exec)
+	UFUNCTION(Exec, BlueprintCallable)
 	virtual void GoToMainMenuLevel() override;
 
 public:
@@ -75,7 +77,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	TSubclassOf<class ABaseBuilding> GetBuildableBP(EBuildable Type);
 	UFUNCTION(BlueprintCallable)
-	UStaticMesh*  GetBuildablePreviewSM(EBuildable Type);
+	TSubclassOf<class ABaseBuilding> GetBuildPreviewBP(EBuildable Type);
 	UFUNCTION(BlueprintCallable)
 	bool GetBuildableDataRow(EBuildable Type, UPARAM(ref) FBuildableDataRow& DataRow);
 	UFUNCTION(BlueprintCallable)
