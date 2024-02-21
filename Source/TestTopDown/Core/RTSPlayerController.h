@@ -106,7 +106,6 @@ public:
 	UFUNCTION()
 	void ClearSelected();
 
-	
 
 
 protected:
@@ -124,11 +123,12 @@ protected:
 	FSelectedUpdatedDelegate OnSelectedUpdated;
 
 
+
 	// BUILDER ===================================
 protected:
 	UFUNCTION(Server, Reliable)
 		void Server_Place(EBuildable buildingType, FTransform spawnTransform);
-	UFUNCTION(Client, Reliable)
+	UFUNCTION()
 		void EndPlacement();
 
 public:
@@ -179,6 +179,11 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UMaterial* BuildPreviewBaseMaterial;
+
+
+	UPROPERTY(BlueprintReadWrite)
+		bool bIsBuildPossibleBefore;
+
 
 	UPROPERTY(EditAnywhere)
 	class UMaterialInstanceDynamic* BuildPossibleMaterial;

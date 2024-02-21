@@ -41,13 +41,16 @@ public:
 	UInputAction* Rotate;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Default")
-	UInputAction* TestPlacement;
+	UInputAction* BuildMode;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Default")
 	UInputAction* SelectDoubleTap;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Default")
 	UInputAction* Command;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Default")
+	UInputAction* ESC;
 
 	//placement
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Placement")
@@ -58,9 +61,6 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Placement")
 	UInputAction* Place;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Placement")
-	UInputAction* PlaceCancel;
 
 
 	//modifier keys
